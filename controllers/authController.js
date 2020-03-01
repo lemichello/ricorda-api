@@ -32,7 +32,7 @@ const signUp = async (req, res) => {
 
     return res.status(201).send({ token });
   } catch (e) {
-    return res.status(500).end();
+    return res.status(400).end();
   }
 };
 
