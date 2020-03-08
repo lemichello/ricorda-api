@@ -27,10 +27,9 @@ const logIn = async (req, res) => {
 
 const signUp = async (req, res) => {
   try {
-    const user = await User.create(req.body);
-    const token = createToken(user);
+    await User.create(req.body);
 
-    return res.status(201).send({ token });
+    return res.status(201).end();
   } catch (e) {
     return res.status(400).end();
   }
