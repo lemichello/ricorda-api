@@ -6,11 +6,11 @@ let wordsPairSchema = new mongoose.Schema({
     type: ObjectId,
     required: true
   },
-  fromWord: {
+  sourceWord: {
     type: String,
     required: true
   },
-  toWord: {
+  translation: {
     type: String,
     required: true
   },
