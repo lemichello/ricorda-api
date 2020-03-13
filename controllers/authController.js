@@ -4,7 +4,8 @@ const { createToken } = require('../services/authService');
 const logIn = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email }).exec();
-    const errorMessage = 'Email or password are incorrect';
+    const errorMessage =
+      'You have entered incorrect email or password. Try again';
 
     if (!user) {
       return res.status(400).send(errorMessage);
@@ -21,7 +22,7 @@ const logIn = async (req, res) => {
     return res.status(200).send({ token });
   } catch (e) {
     console.error(e);
-    return res.status(500).end();
+    return res.status(500).send('Internal server error');
   }
 };
 
@@ -31,7 +32,13 @@ const signUp = async (req, res) => {
 
     return res.status(201).end();
   } catch (e) {
-    return res.status(400).end();
+    if (e.errmsg.includes('duplicate')) {
+      return res
+        .status(400)
+        .send('This email is already taken. Try another one');
+    }
+
+    return res.status(500).send('Internal server error');
   }
 };
 
