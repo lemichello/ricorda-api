@@ -2,13 +2,13 @@ const { Router } = require('express');
 const {
   createPair,
   getWordsForRepeating,
-  repeatWords
+  repeatWord
 } = require('../controllers/wordsController');
 
 const router = Router();
 
 router.get('/', getWordsForRepeating);
 router.post('/', createPair);
-router.put('/:id', repeatWords);
+router.put('/:id', repeatWord);
 
 module.exports = router;

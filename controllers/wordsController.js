@@ -31,7 +31,7 @@ const getWordsForRepeating = async (req, res) => {
   }
 };
 
-const repeatWords = async (req, res) => {
+const repeatWord = async (req, res) => {
   try {
     const updatedDoc = await WordsPair.findOneAndUpdate(
       { _id: req.params.id },
@@ -55,5 +55,5 @@ const repeatWords = async (req, res) => {
 module.exports = {
   createPair,
   getWordsForRepeating,
-  repeatWords
+  repeatWord
 };
