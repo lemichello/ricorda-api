@@ -1,3 +1,4 @@
+const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const config = require('../config/index');
 
@@ -19,7 +20,36 @@ const verityToken = function(token) {
   });
 };
 
+const protect = async function(req, res, next) {
+  const bearer = req.headers.authorization;
+
+  if (!bearer || !bearer.startsWith('Bearer ')) {
+    return res.status(401).end();
+  }
+
+  let payload;
+  const token = bearer.split('Bearer ')[1].trim();
+
+  try {
+    payload = await verityToken(token);
+  } catch (e) {
+    return res.status(401).end();
+  }
+
+  const user = await User.findById(payload.id)
+    .lean()
+    .exec();
+
+  if (!user) {
+    return res.status(401).end();
+  }
+
+  req.user = user;
+  next();
+};
+
 module.exports = {
   createToken,
-  verityToken
+  verityToken,
+  protect
 };

@@ -7,13 +7,13 @@ const logIn = async (req, res) => {
     const errorMessage = 'Email or password are incorrect';
 
     if (!user) {
-      return res.status(401).send(errorMessage);
+      return res.status(400).send(errorMessage);
     }
 
     const matches = await user.checkPassword(req.body.password);
 
     if (!matches) {
-      return res.status(401).send(errorMessage);
+      return res.status(400).send(errorMessage);
     }
 
     const token = createToken(user);
@@ -27,12 +27,11 @@ const logIn = async (req, res) => {
 
 const signUp = async (req, res) => {
   try {
-    const user = await User.create(req.body);
-    const token = createToken(user);
+    await User.create(req.body);
 
-    return res.status(201).send({ token });
+    return res.status(201).end();
   } catch (e) {
-    return res.status(500).end();
+    return res.status(400).end();
   }
 };
 
