@@ -27,7 +27,7 @@ const getWordsForRepeating = async (req, res) => {
     res.status(200).json({ data: words });
   } catch (e) {
     console.error(e);
-    res.status(500).end();
+    res.status(500).send('Internal server error');
   }
 };
 
@@ -48,7 +48,7 @@ const repeatWord = async (req, res) => {
     res.status(200).json({ data: updatedDoc });
   } catch (e) {
     console.error(e);
-    res.status(500).end();
+    res.status(500).send('Internal server error');
   }
 };
 
