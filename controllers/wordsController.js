@@ -21,22 +21,23 @@ const getWordsForRepeating = async (req, res) => {
     let todayDate = new Date();
     let words = await WordsPair.find({
       userId: req.user._id,
-      nextRepetitionDate: { $lte: todayDate }
+      nextRepetitionDate: { $lte: todayDate },
+      repetitions: { $lt: 5 }
     });
 
     res.status(200).json({ data: words });
   } catch (e) {
     console.error(e);
-    res.status(500).end();
+    res.status(500).send('Internal server error');
   }
 };
 
-const repeatWord = async (req, res) => {
+const updateWordsPair = async (req, res) => {
   try {
     const updatedDoc = await WordsPair.findOneAndUpdate(
       { _id: req.params.id },
       req.body,
-      { new: true }
+      { new: true, useFindAndModify: false }
     )
       .lean()
       .exec();
@@ -48,12 +49,29 @@ const repeatWord = async (req, res) => {
     res.status(200).json({ data: updatedDoc });
   } catch (e) {
     console.error(e);
-    res.status(500).end();
+    res.status(500).send('Internal server error');
+  }
+};
+
+const getWordsCount = async (req, res) => {
+  try {
+    let todayDate = new Date();
+    const count = await WordsPair.countDocuments({
+      userId: req.user._id,
+      nextRepetitionDate: { $lte: todayDate },
+      repetitions: { $lt: 5 }
+    });
+
+    res.status(200).json({ data: count });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Internal server error');
   }
 };
 
 module.exports = {
   createPair,
   getWordsForRepeating,
-  repeatWord
+  updateWordsPair,
+  getWordsCount
 };

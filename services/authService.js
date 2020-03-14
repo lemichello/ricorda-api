@@ -24,7 +24,7 @@ const protect = async function(req, res, next) {
   const bearer = req.headers.authorization;
 
   if (!bearer || !bearer.startsWith('Bearer ')) {
-    return res.status(401).end();
+    return res.status(401).send("Bearer token isn't provided");
   }
 
   let payload;
@@ -33,7 +33,7 @@ const protect = async function(req, res, next) {
   try {
     payload = await verityToken(token);
   } catch (e) {
-    return res.status(401).end();
+    return res.status(401).send('You are not logged in');
   }
 
   const user = await User.findById(payload.id)
