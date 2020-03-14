@@ -53,8 +53,25 @@ const updateWordsPair = async (req, res) => {
   }
 };
 
+const getWordsCount = async (req, res) => {
+  try {
+    let todayDate = new Date();
+    const count = await WordsPair.countDocuments({
+      userId: req.user._id,
+      nextRepetitionDate: { $lte: todayDate },
+      repetitions: { $lt: 5 }
+    });
+
+    res.status(200).json({ data: count });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Internal server error');
+  }
+};
+
 module.exports = {
   createPair,
   getWordsForRepeating,
-  updateWordsPair
+  updateWordsPair,
+  getWordsCount
 };
