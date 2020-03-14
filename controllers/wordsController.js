@@ -21,7 +21,8 @@ const getWordsForRepeating = async (req, res) => {
     let todayDate = new Date();
     let words = await WordsPair.find({
       userId: req.user._id,
-      nextRepetitionDate: { $lte: todayDate }
+      nextRepetitionDate: { $lte: todayDate },
+      repetitions: { $lt: 5 }
     });
 
     res.status(200).json({ data: words });
