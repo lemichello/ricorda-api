@@ -31,12 +31,12 @@ const getWordsForRepeating = async (req, res) => {
   }
 };
 
-const repeatWord = async (req, res) => {
+const updateWordsPair = async (req, res) => {
   try {
     const updatedDoc = await WordsPair.findOneAndUpdate(
       { _id: req.params.id },
       req.body,
-      { new: true }
+      { new: true, useFindAndModify: false }
     )
       .lean()
       .exec();
@@ -55,5 +55,5 @@ const repeatWord = async (req, res) => {
 module.exports = {
   createPair,
   getWordsForRepeating,
-  repeatWord
+  updateWordsPair
 };
