@@ -41,7 +41,7 @@ const protect = async function(req, res, next) {
     .exec();
 
   if (!user) {
-    return res.status(401).end();
+    return res.status(401).send('You are not logged in');
   }
 
   req.user = user;
