@@ -8,11 +8,13 @@ let wordsPairSchema = new mongoose.Schema({
   },
   sourceWord: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   translation: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   repetitions: {
     type: Number,
