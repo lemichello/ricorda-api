@@ -1,4 +1,5 @@
 const WordsPair = require('../models/wordsPairModel');
+const shuffle = require('lodash/shuffle');
 
 const createPair = async (req, res) => {
   try {
@@ -24,6 +25,8 @@ const getWordsForRepeating = async (req, res) => {
       nextRepetitionDate: { $lte: todayDate },
       repetitions: { $lt: 5 }
     });
+
+    words = shuffle(words);
 
     res.status(200).json({ data: words });
   } catch (e) {
