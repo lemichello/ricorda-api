@@ -30,7 +30,7 @@ const signUp = async (req, res) => {
   try {
     await User.create(req.body);
 
-    return res.status(201).send('Successfully created new word pair');
+    return res.status(201).end();
   } catch (e) {
     if (e.errmsg.includes('duplicate')) {
       return res

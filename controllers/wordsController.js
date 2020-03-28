@@ -13,7 +13,7 @@ const createPair = async (req, res) => {
     res.status(201).json({ data: wordsPair });
   } catch (e) {
     console.error(e);
-    res.status(500).s1('Internal server error');
+    res.status(500).end();
   }
 };
 
@@ -46,7 +46,7 @@ const updateWordsPair = async (req, res) => {
       .exec();
 
     if (!updatedDoc) {
-      return res.status(400).send('Received incorrect word pair');
+      return res.status(400).end();
     }
 
     res.status(200).json({ data: updatedDoc });
