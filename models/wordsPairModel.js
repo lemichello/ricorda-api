@@ -9,7 +9,8 @@ let wordsPairSchema = new mongoose.Schema({
   sourceWord: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    index: true
   },
   translation: {
     type: String,

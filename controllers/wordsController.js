@@ -72,9 +72,29 @@ const getWordsCount = async (req, res) => {
   }
 };
 
+const existsWordPair = async (req, res) => {
+  try {
+    if (typeof req.body.sourceWord !== 'string') {
+      return res
+        .status(400)
+        .send("You need to send source word in '{sourceWord: '...'}' format");
+    }
+    const exists = await WordsPair.exists({
+      userId: req.user._id,
+      sourceWord: req.body.sourceWord
+    });
+
+    res.status(200).json({ data: exists });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Internal server error');
+  }
+};
+
 module.exports = {
   createPair,
   getWordsForRepeating,
   updateWordsPair,
-  getWordsCount
+  getWordsCount,
+  existsWordPair
 };
