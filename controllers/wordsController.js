@@ -35,6 +35,22 @@ const getWordsForRepeating = async (req, res) => {
   }
 };
 
+const getSavedWords = async (req, res) => {
+  try {
+    let words = await WordsPair.find({
+      userId: req.user._id
+    })
+      .lean()
+      .sort({ repetitions: 1, sourceWord: 1 })
+      .exec();
+
+    res.status(200).json({ data: words });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Internal server error');
+  }
+};
+
 const updateWordsPair = async (req, res) => {
   try {
     const updatedDoc = await WordsPair.findOneAndUpdate(
@@ -96,5 +112,6 @@ module.exports = {
   getWordsForRepeating,
   updateWordsPair,
   getWordsCount,
-  existsWordPair
+  existsWordPair,
+  getSavedWords
 };
