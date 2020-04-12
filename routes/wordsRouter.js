@@ -5,7 +5,8 @@ const {
   updateWordsPair,
   getWordsCount,
   existsWordPair,
-  getSavedWords
+  getSavedWords,
+  searchWords,
 } = require('../controllers/wordsController');
 
 const router = Router();
@@ -16,5 +17,6 @@ router.get('/saved', getSavedWords);
 router.post('/', createPair);
 router.put('/:id', updateWordsPair);
 router.post('/exists', existsWordPair);
+router.post('/search', searchWords);
 
 module.exports = router;
