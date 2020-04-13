@@ -1,6 +1,8 @@
 const WordsPair = require('../models/wordsPairModel');
 const shuffle = require('lodash/shuffle');
 
+const pageSize = 15;
+
 const createPair = async (req, res) => {
   try {
     let nextRepetitionDate = new Date();
@@ -36,43 +38,48 @@ const getWordsForRepeating = async (req, res) => {
 };
 
 const getSavedWords = async (req, res) => {
-  try {
-    let words = await WordsPair.find({
-      userId: req.user._id,
-    })
-      .lean()
-      .sort({ repetitions: 1, sourceWord: 1 })
-      .exec();
+  setTimeout(async () => {
+    const page = Number.parseInt(req.params.page);
 
-    res.status(200).json({ data: words });
-  } catch (e) {
-    console.error(e);
-    res.status(500).send('Internal server error');
-  }
-};
+    if (!page) {
+      return res.status(400).send('Improper page value');
+    }
 
-const searchWords = async (req, res) => {
-  if (typeof req.body.word !== 'string') {
-    return res.status(400).send('Searching word needs to be of string type');
-  }
+    if (typeof req.body.word !== 'string') {
+      return res.status(400).send('Searching word needs to be of string type');
+    }
 
-  try {
-    let words = await WordsPair.find({
-      userId: req.user._id,
-    })
-      .or([
-        { sourceWord: { $regex: req.body.word, $options: 'i' } },
-        { translation: { $regex: req.body.word, $options: 'i' } },
-      ])
-      .sort({ repetitions: 1, sourceWord: 1 })
-      .lean()
-      .exec();
+    Promise.all([
+      WordsPair.find({ userId: req.user._id })
+        .or([
+          { sourceWord: { $regex: req.body.word, $options: 'i' } },
+          { translation: { $regex: req.body.word, $options: 'i' } },
+        ])
+        .limit(pageSize)
+        .skip((page - 1) * pageSize)
+        .sort({ repetitions: 1, sourceWord: 1 })
+        .lean()
+        .exec(),
+      WordsPair.find({ userId: req.user._id })
+        .or([
+          { sourceWord: { $regex: req.body.word, $options: 'i' } },
+          { translation: { $regex: req.body.word, $options: 'i' } },
+        ])
+        .countDocuments(),
+    ])
+      .then(([words, count]) => {
+        const next = count > pageSize * page;
 
-    res.status(200).json({ data: words });
-  } catch (e) {
-    console.error(e);
-    res.status(500).send('Internal server error');
-  }
+        res.status(200).json({
+          data: words,
+          page,
+          next,
+        });
+      })
+      .catch(() => {
+        res.status(500).send('Internal server error');
+      });
+  }, 500);
 };
 
 const updateWordsPair = async (req, res) => {
@@ -138,5 +145,4 @@ module.exports = {
   getWordsCount,
   existsWordPair,
   getSavedWords,
-  searchWords,
 };
