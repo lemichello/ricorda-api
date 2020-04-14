@@ -5,14 +5,14 @@ const {
   updateWordsPair,
   getWordsCount,
   existsWordPair,
-  getSavedWords
+  getSavedWords,
 } = require('../controllers/wordsController');
 
 const router = Router();
 
 router.get('/', getWordsForRepeating);
 router.get('/count', getWordsCount);
-router.get('/saved', getSavedWords);
+router.post('/saved/:page', getSavedWords);
 router.post('/', createPair);
 router.put('/:id', updateWordsPair);
 router.post('/exists', existsWordPair);
