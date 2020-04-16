@@ -10,11 +10,11 @@ const cors = require('cors');
 
 var app = express();
 
-const whitelist = ['https://ricorda-cfbe2.web.app/', 'https://ricorda-stage.web.app/']
+const whitelist = ['https://ricorda-cfbe2.web.app', 'https://ricorda-stage.web.app', 'http://localhost:3001']
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
       callback(null, true)
     } else {
       callback(new Error('Not allowed by CORS'))
