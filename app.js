@@ -10,9 +10,16 @@ const cors = require('cors');
 
 var app = express();
 
+const whitelist = ['https://ricorda-cfbe2.web.app/', 'https://ricorda-stage.web.app/']
+
 app.use(cors({
-  origin: ['https://ricorda-cfbe2.web.app/', 'https://ricorda-stage.web.app/']
-}));
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }}));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
