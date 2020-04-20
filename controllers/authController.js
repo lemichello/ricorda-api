@@ -1,5 +1,6 @@
 const User = require('../models/userModel');
 const { createToken } = require('../services/authService');
+const logger = require('../logger');
 
 const logIn = async (req, res) => {
   try {
@@ -19,10 +20,14 @@ const logIn = async (req, res) => {
 
     const token = createToken(user);
 
-    return res.status(200).send({ token });
+    res.status(200).send({ token });
+    logger && logger.info(`Logged in user with email: ${req.body.email}`);
   } catch (e) {
-    console.error(e);
-    return res.status(500).send('Internal server error');
+    logger &&
+      logger.error(`Can't log in user with error: ${e}`, {
+        meta: { requestData: req.body },
+      });
+    res.status(500).send('Internal server error');
   }
 };
 
@@ -30,7 +35,8 @@ const signUp = async (req, res) => {
   try {
     await User.create(req.body);
 
-    return res.status(201).send('Successfully created new word pair');
+    res.status(201).send('Successfully created new word pair');
+    logger && logger.info(`Signed up user with email: ${req.body.email}`);
   } catch (e) {
     if (e.errmsg.includes('duplicate')) {
       return res
@@ -38,11 +44,15 @@ const signUp = async (req, res) => {
         .send('This email is already taken. Try another one');
     }
 
-    return res.status(500).send('Internal server error');
+    logger &&
+      logger.error(`Can't sign up user with error: ${e}`, {
+        meta: { requestData: req.body },
+      });
+    res.status(500).send('Internal server error');
   }
 };
 
 module.exports = {
   logIn,
-  signUp
+  signUp,
 };
