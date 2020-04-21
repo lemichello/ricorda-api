@@ -2,25 +2,25 @@ const logger = require('../logger');
 
 const loggingService = {
   info: function (message, metaData) {
-    if (!logger) {
-      return;
+    if (logger) {
+      logger.info(message, { meta: metaData });
+    } else {
+      console.info(message);
     }
-
-    logger.info(message, { meta: metaData });
   },
   error: function (message, metaData) {
-    if (!logger) {
-      return;
+    if (logger) {
+      logger.error(message, { meta: metaData });
+    } else {
+      console.error(message);
     }
-
-    logger.error(message, { meta: metaData });
   },
   debug: function (message, metaData) {
-    if (!logger) {
-      return;
+    if (logger) {
+      logger.debug(message, { meta: metaData });
+    } else {
+      console.debug(message);
     }
-
-    logger.debug(message, { meta: metaData });
   },
 };
 
