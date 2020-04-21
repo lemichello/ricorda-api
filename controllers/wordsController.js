@@ -1,6 +1,6 @@
 const WordsPair = require('../models/wordsPairModel');
 const shuffle = require('lodash/shuffle');
-const logger = require('../logger');
+const logger = require('../services/loggingService');
 
 const pageSize = 15;
 
@@ -16,11 +16,12 @@ const createPair = async (req, res) => {
       userId: req.user._id,
     });
 
-    res.status(201).json({ data: wordsPair });
     logger.info(`Created new word pair for user: ${req.user._id}`);
+    res.status(201).json({ data: wordsPair });
   } catch (e) {
     logger.error(`Can't create new word pair: ${e}`, {
-      meta: { userId: req.user._id, requestData: req.body },
+      userId: req.user._id,
+      requestData: req.body,
     });
     res.status(500).send('Internal server error');
   }
@@ -37,11 +38,11 @@ const getWordsForRepeating = async (req, res) => {
 
     words = shuffle(words);
 
-    res.status(200).json({ data: words });
     logger.info(`Sent words for repeating to user: ${req.user._id}`);
+    res.status(200).json({ data: words });
   } catch (e) {
     logger.error(`Can't get words for repeating: ${e}`, {
-      meta: { userId: req.user._id },
+      userId: req.user._id,
     });
     res.status(500).send('Internal server error');
   }
@@ -79,17 +80,18 @@ const getSavedWords = async (req, res) => {
     .then(([words, count]) => {
       const next = count > pageSize * page;
 
+      logger.info(`Sent saved words for user: ${req.user._id}`);
+
       res.status(200).json({
         data: words,
         page,
         next,
       });
-
-      logger.info(`Sent saved words for user: ${req.user._id}`);
     })
     .catch((e) => {
       logger.error(`Can't send saved words: ${e}`, {
-        meta: { userId: req.user._id, requestData: req.body },
+        userId: req.user._id,
+        requestData: req.body,
       });
       res.status(500).send('Internal server error');
     });
@@ -109,11 +111,12 @@ const updateWordsPair = async (req, res) => {
       return res.status(400).send('Received incorrect word pair');
     }
 
-    res.status(200).json({ data: updatedDoc });
     logger.info(`Updated word pair for user: ${req.user._id}`);
+    res.status(200).json({ data: updatedDoc });
   } catch (e) {
     logger.error(`Can't update word pair: ${e}`, {
-      meta: { userId: req.user._id, requestData: req.body },
+      userId: req.user._id,
+      requestData: req.body,
     });
     res.status(500).send('Internal server error');
   }
@@ -128,11 +131,12 @@ const getWordsCount = async (req, res) => {
       repetitions: { $lt: 5 },
     });
 
-    res.status(200).json({ data: count });
     logger.info(`Sent words count for user: ${req.user._id}`);
+    res.status(200).json({ data: count });
   } catch (e) {
     logger.error(`Can't send words count: ${e}`, {
-      meta: { userId: req.user._id, requestData: req.body },
+      userId: req.user._id,
+      requestData: req.body,
     });
     res.status(500).send('Internal server error');
   }
@@ -150,11 +154,12 @@ const existsWordPair = async (req, res) => {
       sourceWord: req.body.sourceWord,
     });
 
-    res.status(200).json({ data: exists });
     logger.info(`Sent word pair existence result to user: ${req.user._id}`);
+    res.status(200).json({ data: exists });
   } catch (e) {
     logger.error(`Can't send word pair existence result: ${e}`, {
-      meta: { userId: req.user._id, requestData: req.body },
+      userId: req.user._id,
+      requestData: req.body,
     });
     res.status(500).send('Internal server error');
   }
