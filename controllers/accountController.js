@@ -52,6 +52,12 @@ const updateEmail = async (req, res) => {
     logger.info(`Changed email for user: ${req.user._id}`);
     res.status(200).send('Successfully updated email');
   } catch (e) {
+    if (e.errmsg.includes('duplicate')) {
+      return res
+        .status(400)
+        .send('This email is already taken. Try another one');
+    }
+
     logger.error(`Can't update email for user: ${e}`, {
       userId: req.user._id,
       newEmail: newEmail,
