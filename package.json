@@ -5,7 +5,7 @@
   "scripts": {
     "tsc": "tsc",
     "dev": "tsc && cross-env NODE_ENV=dev node ./build/bin/www",
-    "start": "cross-env NODE_ENV=prod node ./bin/www"
+    "start": "tsc && cross-env NODE_ENV=prod node ./build/bin/www"
   },
   "dependencies": {
     "@types/bcrypt": "^3.0.0",
