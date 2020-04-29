@@ -1,8 +1,9 @@
-const User = require('../models/userModel');
-const { createToken } = require('../services/authService');
-const logger = require('../services/loggingService');
+import { User } from '../models/userModel';
+import { createToken } from '../services/authService';
+import logger from '../services/loggingService';
+import { Request, Response } from 'express';
 
-const logIn = async (req, res) => {
+export const logIn = async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ email: req.body.email }).exec();
     const errorMessage =
@@ -30,7 +31,7 @@ const logIn = async (req, res) => {
   }
 };
 
-const signUp = async (req, res) => {
+export const signUp = async (req: Request, res: Response) => {
   try {
     await User.create(req.body);
 
@@ -48,9 +49,4 @@ const signUp = async (req, res) => {
     });
     res.status(500).send('Internal server error');
   }
-};
-
-module.exports = {
-  logIn,
-  signUp,
 };

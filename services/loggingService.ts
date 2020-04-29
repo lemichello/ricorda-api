@@ -1,21 +1,21 @@
-const logger = require('../logger');
+import logger from '../logger';
 
 const loggingService = {
-  info: function (message, metaData) {
+  info: function (message: string, metaData?: object) {
     if (logger) {
       logger.info(message, { meta: metaData });
     } else {
       console.info(message);
     }
   },
-  error: function (message, metaData) {
+  error: function (message: string, metaData?: object) {
     if (logger) {
       logger.error(message, { meta: metaData });
     } else {
       console.error(message);
     }
   },
-  debug: function (message, metaData) {
+  debug: function (message: string, metaData?: object) {
     if (logger) {
       logger.debug(message, { meta: metaData });
     } else {
@@ -24,4 +24,4 @@ const loggingService = {
   },
 };
 
-module.exports = loggingService;
+export default loggingService;

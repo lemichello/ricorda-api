@@ -1,12 +1,12 @@
-const { Router } = require('express');
-const {
+import { Router } from 'express';
+import {
   createPair,
   getWordsForRepeating,
   updateWordsPair,
   getWordsCount,
   existsWordPair,
   getSavedWords,
-} = require('../controllers/wordsController');
+} from '../controllers/wordsController';
 
 const router = Router();
 
@@ -17,4 +17,4 @@ router.post('/', createPair);
 router.put('/:id', updateWordsPair);
 router.post('/exists', existsWordPair);
 
-module.exports = router;
+export default router;
