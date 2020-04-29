@@ -4,10 +4,12 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('ricorda-api:server');
-var http = require('http');
-var connectToDb = require('../services/dbService');
+import app from '../app';
+import http from 'http';
+import connectToDb from '../services/dbService';
+import debug from 'debug';
+
+const serverDebug = debug('ricorda-api:server');
 
 /**
  * Get port from environment and store in Express.
@@ -40,7 +42,7 @@ server.on('listening', onListening);
  * Normalize a port into a number, string, or false.
  */
 
-function normalizePort(val) {
+function normalizePort(val: string) {
   var port = parseInt(val, 10);
 
   if (isNaN(port)) {
@@ -60,14 +62,12 @@ function normalizePort(val) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
+function onError(error: any) {
   if (error.syscall !== 'listen') {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -90,8 +90,6 @@ function onError(error) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr!.port;
+  serverDebug('Listening on ' + bind);
 }

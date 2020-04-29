@@ -1,7 +1,8 @@
-const User = require('../models/userModel');
-const logger = require('../services/loggingService');
+import { User } from '../models/userModel';
+import { Request, Response } from 'express';
+import logger from '../services/loggingService';
 
-const updatePassword = async (req, res) => {
+export const updatePassword = async (req: Request, res: Response) => {
   let { oldPassword, newPassword } = req.body;
 
   if (typeof oldPassword !== 'string' || typeof newPassword !== 'string') {
@@ -9,6 +10,11 @@ const updatePassword = async (req, res) => {
   }
 
   let user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(400).send('Incorrect token id');
+  }
+
   let correctOldPassword = await user.checkPassword(oldPassword);
 
   if (!correctOldPassword) {
@@ -31,7 +37,7 @@ const updatePassword = async (req, res) => {
   }
 };
 
-const updateEmail = async (req, res) => {
+export const updateEmail = async (req: Request, res: Response) => {
   let { newEmail } = req.body;
 
   if (typeof newEmail !== 'string') {
@@ -44,7 +50,7 @@ const updateEmail = async (req, res) => {
         _id: req.user._id,
       },
       { email: newEmail },
-      { new: true, useFindAndModify: false }
+      { new: true }
     )
       .lean()
       .exec();
@@ -64,9 +70,4 @@ const updateEmail = async (req, res) => {
     });
     res.status(500).send('Internal server error');
   }
-};
-
-module.exports = {
-  updatePassword,
-  updateEmail,
 };

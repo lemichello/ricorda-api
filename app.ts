@@ -1,14 +1,14 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+import express from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
 
-const authRouter = require('./routes/authRouter');
-const wordsRouter = require('./routes/wordsRouter');
-const accountRouter = require('./routes/accountRouter');
+import authRouter from './routes/authRouter';
+import wordsRouter from './routes/wordsRouter';
+import accountRouter from './routes/accountRouter';
 
-const { protect } = require('./services/authService');
-const cors = require('cors');
+import { protect } from './services/authService';
+import cors from 'cors';
 
 var app = express();
 
@@ -16,12 +16,13 @@ const whitelist = [
   'https://ricorda-cfbe2.web.app',
   'https://ricorda-stage.web.app',
   'http://localhost:3001',
+  'http://localhost:5000',
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (whitelist.indexOf(origin) !== -1 || !origin) {
+      if (!origin || whitelist.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -29,7 +30,7 @@ app.use(
     },
   })
 );
-app.use(logger('dev'));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -40,4 +41,4 @@ app.use('/api', protect);
 app.use('/api/words', wordsRouter);
 app.use('/api/account', accountRouter);
 
-module.exports = app;
+export default app;

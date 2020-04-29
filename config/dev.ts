@@ -1,4 +1,6 @@
-module.exports = {
+import IConfig from './config';
+
+const devConfig: IConfig = {
   dbUrl: 'mongodb://localhost:27017/ricorda',
   secrets: {
     jwt: 'so2i3fisi2zxh289sd',
@@ -6,3 +8,5 @@ module.exports = {
   },
   logDnaKey: '',
 };
+
+export default devConfig;

@@ -1,16 +1,17 @@
-const WordsPair = require('../models/wordsPairModel');
-const shuffle = require('lodash/shuffle');
-const logger = require('../services/loggingService');
+import { WordPair } from '../models/wordsPairModel';
+import shuffle from 'lodash/shuffle';
+import logger from '../services/loggingService';
+import { Request, Response } from 'express';
 
 const pageSize = 15;
 
-const createPair = async (req, res) => {
+export const createPair = async (req: Request, res: Response) => {
   try {
     let nextRepetitionDate = new Date();
 
     nextRepetitionDate.setDate(nextRepetitionDate.getDate() + 1);
 
-    let wordsPair = await WordsPair.create({
+    let wordsPair = await WordPair.create({
       ...req.body,
       nextRepetitionDate,
       userId: req.user._id,
@@ -27,10 +28,10 @@ const createPair = async (req, res) => {
   }
 };
 
-const getWordsForRepeating = async (req, res) => {
+export const getWordsForRepeating = async (req: Request, res: Response) => {
   try {
     let todayDate = new Date();
-    let words = await WordsPair.find({
+    let words = await WordPair.find({
       userId: req.user._id,
       nextRepetitionDate: { $lte: todayDate },
       repetitions: { $lt: 5 },
@@ -48,7 +49,7 @@ const getWordsForRepeating = async (req, res) => {
   }
 };
 
-const getSavedWords = async (req, res) => {
+export const getSavedWords = async (req: Request, res: Response) => {
   const page = Number.parseInt(req.params.page);
 
   if (!page) {
@@ -60,7 +61,7 @@ const getSavedWords = async (req, res) => {
   }
 
   Promise.all([
-    WordsPair.find({ userId: req.user._id })
+    WordPair.find({ userId: req.user._id })
       .or([
         { sourceWord: { $regex: req.body.word, $options: 'i' } },
         { translation: { $regex: req.body.word, $options: 'i' } },
@@ -70,7 +71,7 @@ const getSavedWords = async (req, res) => {
       .sort({ repetitions: 1, sourceWord: 1 })
       .lean()
       .exec(),
-    WordsPair.find({ userId: req.user._id })
+    WordPair.find({ userId: req.user._id })
       .or([
         { sourceWord: { $regex: req.body.word, $options: 'i' } },
         { translation: { $regex: req.body.word, $options: 'i' } },
@@ -97,12 +98,12 @@ const getSavedWords = async (req, res) => {
     });
 };
 
-const updateWordsPair = async (req, res) => {
+export const updateWordsPair = async (req: Request, res: Response) => {
   try {
-    const updatedDoc = await WordsPair.findOneAndUpdate(
+    const updatedDoc = await WordPair.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       req.body,
-      { new: true, useFindAndModify: false }
+      { new: true }
     )
       .lean()
       .exec();
@@ -122,10 +123,10 @@ const updateWordsPair = async (req, res) => {
   }
 };
 
-const getWordsCount = async (req, res) => {
+export const getWordsCount = async (req: Request, res: Response) => {
   try {
     let todayDate = new Date();
-    const count = await WordsPair.countDocuments({
+    const count = await WordPair.countDocuments({
       userId: req.user._id,
       nextRepetitionDate: { $lte: todayDate },
       repetitions: { $lt: 5 },
@@ -142,14 +143,14 @@ const getWordsCount = async (req, res) => {
   }
 };
 
-const existsWordPair = async (req, res) => {
+export const existsWordPair = async (req: Request, res: Response) => {
   try {
     if (typeof req.body.sourceWord !== 'string') {
       return res
         .status(400)
         .send("You need to send source word in '{sourceWord: '...'}' format");
     }
-    const exists = await WordsPair.exists({
+    const exists = await WordPair.exists({
       userId: req.user._id,
       sourceWord: req.body.sourceWord,
     });
@@ -163,13 +164,4 @@ const existsWordPair = async (req, res) => {
     });
     res.status(500).send('Internal server error');
   }
-};
-
-module.exports = {
-  createPair,
-  getWordsForRepeating,
-  updateWordsPair,
-  getWordsCount,
-  existsWordPair,
-  getSavedWords,
 };
