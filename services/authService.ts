@@ -3,11 +3,35 @@ import { User, IUserModel } from '../models/userModel';
 import { sign, verify } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
-export const createToken: (user: IUserModel) => string = function (
+export const createAccessToken: (user: IUserModel) => string = function (
   user: IUserModel
 ) {
-  return sign({ id: user.id }, config.secrets.jwt, {
-    expiresIn: config.secrets.jwtExpires,
+  return sign({ id: user.id }, config.secrets.accessTokenSecret, {
+    expiresIn: '15m',
+  });
+};
+
+export const createRefreshToken: (user: IUserModel) => string = function (
+  user: IUserModel
+) {
+  return sign(
+    { id: user.id, tokenVersion: user.tokenVersion },
+    config.secrets.refreshTokenSecret,
+    {
+      expiresIn: '7d',
+    }
+  );
+};
+
+export const sendRefreshToken: (
+  res: Response,
+  token: string
+) => void = function (res: Response, token: string) {
+  res.cookie('acctkn', token, {
+    httpOnly: true,
+    sameSite: 'none',
+    secure: true,
+    path: '/',
   });
 };
 
@@ -26,15 +50,15 @@ export const protect = async function (
   const token = bearer.split('Bearer ')[1].trim();
 
   try {
-    payload = verify(token, config.secrets.jwt);
+    payload = verify(token, config.secrets.accessTokenSecret);
   } catch (e) {
-    return res.status(401).send('You are not logged in');
+    return res.status(401).send('Incorrect access token');
   }
 
-  const user = (await User.findById(payload.id).lean().exec()) as IUserModel;
+  const user = (await User.findById(payload.id).exec()) as IUserModel;
 
   if (!user) {
-    return res.status(401).send('You are not logged in');
+    return res.status(401).send('Incorrect access token');
   }
 
   req.user = user;

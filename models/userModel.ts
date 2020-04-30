@@ -5,6 +5,7 @@ interface IUserSchema extends Document {
   _id: string;
   email: string;
   password: string;
+  tokenVersion: number;
 }
 
 interface IUserBase extends IUserSchema {
@@ -22,6 +23,11 @@ const userSchema: Schema = new mongoose.Schema({
   },
   password: {
     type: String,
+    required: true,
+  },
+  tokenVersion: {
+    type: Number,
+    default: 0,
     required: true,
   },
 });

@@ -3,8 +3,8 @@ import IConfig from './config';
 const prodConfig: IConfig = {
   dbUrl: process.env.MONGODB_URL!,
   secrets: {
-    jwt: process.env.JWT_SECRET!,
-    jwtExpires: '10 days',
+    accessTokenSecret: process.env.ACCESS_TOKEN_SECRET!,
+    refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET!,
   },
   logDnaKey: process.env.LOG_DNA_KEY!,
 };
