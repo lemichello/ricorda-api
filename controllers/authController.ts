@@ -1,11 +1,24 @@
-import { User } from '../models/userModel';
-import { createToken } from '../services/authService';
+import { User, IUserModel } from '../models/userModel';
 import logger from '../services/loggingService';
 import { Request, Response } from 'express';
+import { verify } from 'jsonwebtoken';
+import config from '../config';
+import {
+  sendRefreshToken,
+  createRefreshToken,
+  createAccessToken,
+} from '../services/authService';
+
+interface IRefreshTokenResponse {
+  ok: boolean;
+  accessToken: string;
+}
 
 export const logIn = async (req: Request, res: Response) => {
   try {
-    const user = await User.findOne({ email: req.body.email }).exec();
+    const user = (await User.findOne({
+      email: req.body.email,
+    }).exec()) as IUserModel;
     const errorMessage =
       'You have entered incorrect email or password. Try again';
 
@@ -19,16 +32,21 @@ export const logIn = async (req: Request, res: Response) => {
       return res.status(400).send(errorMessage);
     }
 
-    const token = createToken(user);
+    sendRefreshToken(res, createRefreshToken(user));
 
     logger.info(`Logged in user with email: ${req.body.email}`);
-    res.status(200).send({ token });
+    res.status(200).json({ token: createAccessToken(user) });
   } catch (e) {
     logger.error(`Can't log in user with error: ${e}`, {
       requestData: req.body,
     });
     res.status(500).send('Internal server error');
   }
+};
+
+export const logOut = (req: Request, res: Response) => {
+  sendRefreshToken(res, '');
+  res.status(200).send('Successfully logged out');
 };
 
 export const signUp = async (req: Request, res: Response) => {
@@ -49,4 +67,41 @@ export const signUp = async (req: Request, res: Response) => {
     });
     res.status(500).send('Internal server error');
   }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  const token = req.cookies.acctkn;
+  let response: IRefreshTokenResponse = { ok: false, accessToken: '' };
+
+  if (!token) {
+    return res.json(response);
+  }
+
+  let payload: any = null;
+
+  try {
+    payload = verify(token, config.secrets.refreshTokenSecret);
+  } catch (e) {
+    return res.json(response);
+  }
+
+  const user = (await User.findById(payload.id).exec()) as IUserModel;
+
+  if (!user) {
+    return res.json(response);
+  }
+
+  if (user.tokenVersion !== payload.tokenVersion) {
+    return res.json(response);
+  }
+
+  sendRefreshToken(res, createRefreshToken(user));
+
+  response = {
+    ok: true,
+    accessToken: createAccessToken(user),
+  };
+
+  logger.info(`Refreshed access token for user: ${user.id}`);
+  res.json(response);
 };

@@ -1,4 +1,3 @@
-import { User } from '../models/userModel';
 import { Request, Response } from 'express';
 import logger from '../services/loggingService';
 
@@ -9,32 +8,27 @@ export const updatePassword = async (req: Request, res: Response) => {
     return res.status(400).send('Incorrect type of old or new passwords');
   }
 
-  let user = await User.findById(req.user._id);
-
-  if (!user) {
-    return res.status(400).send('Incorrect token id');
-  }
-
-  let correctOldPassword = await user.checkPassword(oldPassword);
+  let correctOldPassword = await req.user.checkPassword(oldPassword);
 
   if (!correctOldPassword) {
     return res.status(400).send('Incorrect old password');
   }
 
   try {
-    user.password = newPassword;
-    user.save();
-
-    logger.info(`Changed password for user: ${req.user._id}`);
-    res.status(200).send('Successfully updated password');
+    req.user.password = newPassword;
+    await req.user.save();
   } catch (e) {
     logger.error(`Can't update password for user: ${e}`, {
       userId: req.user._id,
       oldPassword: oldPassword,
       newPassword: newPassword,
     });
-    res.status(500).send('Internal server error');
+
+    return res.status(500).send('Internal server error');
   }
+
+  logger.info(`Changed password for user: ${req.user._id}`);
+  res.status(200).send('Successfully updated password');
 };
 
 export const updateEmail = async (req: Request, res: Response) => {
@@ -45,18 +39,9 @@ export const updateEmail = async (req: Request, res: Response) => {
   }
 
   try {
-    await User.findOneAndUpdate(
-      {
-        _id: req.user._id,
-      },
-      { email: newEmail },
-      { new: true }
-    )
-      .lean()
-      .exec();
+    req.user.email = newEmail;
 
-    logger.info(`Changed email for user: ${req.user._id}`);
-    res.status(200).send('Successfully updated email');
+    await req.user.save();
   } catch (e) {
     if (e.errmsg.includes('duplicate')) {
       return res
@@ -68,6 +53,19 @@ export const updateEmail = async (req: Request, res: Response) => {
       userId: req.user._id,
       newEmail: newEmail,
     });
-    res.status(500).send('Internal server error');
+
+    return res.status(500).send('Internal server error');
   }
+
+  logger.info(`Changed email for user: ${req.user._id}`);
+  res.status(200).send('Successfully updated email');
+};
+
+export const revokeRefreshToken = async function (req: Request, res: Response) {
+  req.user.tokenVersion++;
+
+  await req.user.save();
+
+  logger.info(`Revoked access token for user: ${req.user.id}`);
+  res.status(200).send('Successfully revoked refresh token');
 };
