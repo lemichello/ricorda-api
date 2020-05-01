@@ -5,4 +5,5 @@ export default interface IConfig {
     refreshTokenSecret: string;
   };
   logDnaKey: string;
+  secureCookies: boolean;
 }

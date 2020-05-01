@@ -7,6 +7,7 @@ const devConfig: IConfig = {
     refreshTokenSecret: 'n7UU9prJefTBV6YbAPWTMZ',
   },
   logDnaKey: '',
+  secureCookies: false,
 };
 
 export default devConfig;
