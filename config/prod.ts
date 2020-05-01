@@ -7,6 +7,7 @@ const prodConfig: IConfig = {
     refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET!,
   },
   logDnaKey: process.env.LOG_DNA_KEY!,
+  secureCookies: true,
 };
 
 export default prodConfig;

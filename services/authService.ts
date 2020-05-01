@@ -7,7 +7,7 @@ export const createAccessToken: (user: IUserModel) => string = function (
   user: IUserModel
 ) {
   return sign({ id: user.id }, config.secrets.accessTokenSecret, {
-    expiresIn: '15m',
+    expiresIn: '15s',
   });
 };
 
@@ -18,7 +18,7 @@ export const createRefreshToken: (user: IUserModel) => string = function (
     { id: user.id, tokenVersion: user.tokenVersion },
     config.secrets.refreshTokenSecret,
     {
-      expiresIn: '7d',
+      expiresIn: '3m',
     }
   );
 };
@@ -30,7 +30,7 @@ export const sendRefreshToken: (
   res.cookie('acctkn', token, {
     httpOnly: true,
     sameSite: 'none',
-    secure: true,
+    secure: config.secureCookies,
     path: '/',
   });
 };
