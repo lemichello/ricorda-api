@@ -7,7 +7,7 @@ export const createAccessToken: (user: IUserModel) => string = function (
   user: IUserModel
 ) {
   return sign({ id: user.id }, config.secrets.accessTokenSecret, {
-    expiresIn: '15s',
+    expiresIn: '15m',
   });
 };
 
@@ -18,7 +18,7 @@ export const createRefreshToken: (user: IUserModel) => string = function (
     { id: user.id, tokenVersion: user.tokenVersion },
     config.secrets.refreshTokenSecret,
     {
-      expiresIn: '3m',
+      expiresIn: '7d',
     }
   );
 };
