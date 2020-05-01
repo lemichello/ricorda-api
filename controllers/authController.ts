@@ -71,9 +71,13 @@ export const signUp = async (req: Request, res: Response) => {
 
 export const refreshToken = async (req: Request, res: Response) => {
   const token = req.cookies.acctkn;
+
   let response: IRefreshTokenResponse = { ok: false, accessToken: '' };
 
   if (!token) {
+    logger.debug('Received empty token for refresh', {
+      token: token,
+    });
     return res.json(response);
   }
 
@@ -82,16 +86,27 @@ export const refreshToken = async (req: Request, res: Response) => {
   try {
     payload = verify(token, config.secrets.refreshTokenSecret);
   } catch (e) {
+    logger.debug('Received incorrect token for refresh', {
+      token: token,
+    });
     return res.json(response);
   }
 
   const user = (await User.findById(payload.id).exec()) as IUserModel;
 
   if (!user) {
+    logger.debug('Received token with incorrect user id for refresh', {
+      token: token,
+    });
     return res.json(response);
   }
 
   if (user.tokenVersion !== payload.tokenVersion) {
+    logger.debug('Received outdated token for refresh', {
+      token: token,
+      usersTokenVersion: user.tokenVersion,
+      tokenVersion: payload.tokenVersion,
+    });
     return res.json(response);
   }
 
