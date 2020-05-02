@@ -2,6 +2,7 @@ import config from '../config/index';
 import { User, IUserModel } from '../models/userModel';
 import { sign, verify } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import moment from 'moment';
 
 export const createAccessToken: (user: IUserModel) => string = function (
   user: IUserModel
@@ -30,6 +31,7 @@ export const sendRefreshToken: (
   res.cookie('acctkn', token, {
     httpOnly: true,
     sameSite: 'none',
+    expires: moment().add(7, 'days').toDate(),
     secure: config.secureCookies,
     path: '/',
   });
