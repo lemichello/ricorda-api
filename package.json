@@ -8,6 +8,9 @@
     "start": "tsc && cross-env NODE_ENV=prod node ./build/bin/www",
     "debug": "tsc && cross-env NODE_ENV=dev node --inspect ./build/bin/www"
   },
+  "engines": {
+    "node": "14.x"
+  },
   "dependencies": {
     "@types/bcrypt": "^3.0.0",
     "@types/cookie-parser": "^1.4.2",
