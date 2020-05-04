@@ -4,8 +4,10 @@ import bcrypt from 'bcrypt';
 interface IUserSchema extends Document {
   _id: string;
   email: string;
-  password: string;
+  password: string | null;
   tokenVersion: number;
+  externalType: 'Google' | null;
+  externalId: string | null;
 }
 
 interface IUserBase extends IUserSchema {
@@ -23,12 +25,18 @@ const userSchema: Schema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
   },
   tokenVersion: {
     type: Number,
     default: 0,
     required: true,
+  },
+  externalType: {
+    type: String,
+    enum: ['Google'],
+  },
+  externalId: {
+    type: String,
   },
 });
 

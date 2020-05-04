@@ -8,16 +8,68 @@ import {
   createRefreshToken,
   createAccessToken,
 } from '../services/authService';
+import { OAuth2Client, TokenPayload } from 'google-auth-library';
 
 interface IRefreshTokenResponse {
   ok: boolean;
   accessToken: string;
 }
 
+interface ILoginRequest {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
+const googleAuthClient = new OAuth2Client(config.googleClientId);
+
+const registerUserWithGoogle = async (
+  res: Response,
+  email: string,
+  token: string
+) => {
+  let newUser = {
+    email: email,
+    externalType: 'Google',
+    externalId: token,
+  };
+
+  try {
+    let registeredUser = await User.create(newUser);
+
+    sendRefreshToken(res, createRefreshToken(registeredUser, false), false);
+
+    logger.info(`Registered user with Google: ${email}`);
+    return res.status(200).json({ token: createAccessToken(registeredUser) });
+  } catch (e) {
+    if (e.errmsg.includes('duplicate')) {
+      return res
+        .status(400)
+        .send('This email is already taken. Try another one');
+    }
+
+    logger.error(`Can't register user with Google: ${e}`, {
+      userEmail: email,
+    });
+    res.status(500).send('Internal server error');
+  }
+};
+
 export const logIn = async (req: Request, res: Response) => {
+  const { email, password, rememberMe }: ILoginRequest = req.body;
+
+  if (
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    typeof rememberMe !== 'boolean'
+  ) {
+    return res.status(400).send('Incorrect login credentials');
+  }
+
   try {
     const user = (await User.findOne({
       email: req.body.email,
+      password: { $ne: null },
     }).exec()) as IUserModel;
     const errorMessage =
       'You have entered incorrect email or password. Try again';
@@ -32,7 +84,7 @@ export const logIn = async (req: Request, res: Response) => {
       return res.status(400).send(errorMessage);
     }
 
-    sendRefreshToken(res, createRefreshToken(user));
+    sendRefreshToken(res, createRefreshToken(user, !rememberMe), !rememberMe);
 
     logger.info(`Logged in user with email: ${req.body.email}`);
     res.status(200).json({ token: createAccessToken(user) });
@@ -44,14 +96,68 @@ export const logIn = async (req: Request, res: Response) => {
   }
 };
 
+export const logInWithGoogle = async (req: Request, res: Response) => {
+  let token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(400).send('Received empty user token');
+  }
+
+  let payload: TokenPayload | undefined;
+
+  try {
+    const ticket = await googleAuthClient.verifyIdToken({
+      idToken: token,
+      audience: config.googleClientId,
+    });
+
+    payload = ticket.getPayload();
+  } catch (e) {
+    return res.status(400).send('Incorrect user token');
+  }
+
+  if (payload === undefined) {
+    return res.status(400).send('Incorrect user token');
+  }
+
+  const { email, sub } = payload;
+  const user = await User.findOne({
+    externalId: sub,
+    externalType: 'Google',
+  }).exec();
+
+  // User is already registered.
+  if (user) {
+    sendRefreshToken(res, createRefreshToken(user, false), false);
+
+    logger.info(`Logged in user with Google: ${user.email}`);
+    return res.status(200).json({ token: createAccessToken(user) });
+  }
+
+  if (!email) {
+    return res.status(400).send(`User's email isn't provided in token`);
+  }
+
+  await registerUserWithGoogle(res, email, sub);
+};
+
 export const logOut = (req: Request, res: Response) => {
-  sendRefreshToken(res, '');
+  sendRefreshToken(res, '', true);
   res.status(200).send('Successfully logged out');
 };
 
 export const signUp = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).send('Incorrect type of email or password');
+  }
+
   try {
-    await User.create(req.body);
+    await User.create({
+      email: email,
+      password: password,
+    });
 
     logger.info(`Signed up user with email: ${req.body.email}`);
     res.status(201).send('Successfully created new word pair');
@@ -110,7 +216,11 @@ export const refreshToken = async (req: Request, res: Response) => {
     return res.json(response);
   }
 
-  sendRefreshToken(res, createRefreshToken(user));
+  sendRefreshToken(
+    res,
+    createRefreshToken(user, payload.isSessionToken),
+    payload.isSessionToken
+  );
 
   response = {
     ok: true,

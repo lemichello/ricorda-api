@@ -12,11 +12,16 @@ export const createAccessToken: (user: IUserModel) => string = function (
   });
 };
 
-export const createRefreshToken: (user: IUserModel) => string = function (
-  user: IUserModel
-) {
+export const createRefreshToken: (
+  user: IUserModel,
+  isSessionToken: boolean
+) => string = function (user: IUserModel, isSessionToken: boolean) {
   return sign(
-    { id: user.id, tokenVersion: user.tokenVersion },
+    {
+      id: user.id,
+      tokenVersion: user.tokenVersion,
+      isSessionToken: isSessionToken,
+    },
     config.secrets.refreshTokenSecret,
     {
       expiresIn: '7d',
@@ -26,12 +31,13 @@ export const createRefreshToken: (user: IUserModel) => string = function (
 
 export const sendRefreshToken: (
   res: Response,
-  token: string
-) => void = function (res: Response, token: string) {
+  token: string,
+  isSessionCookie: boolean
+) => void = function (res: Response, token: string, isSessionCookie: boolean) {
   res.cookie('acctkn', token, {
     httpOnly: true,
     sameSite: 'none',
-    expires: moment().add(7, 'days').toDate(),
+    expires: isSessionCookie ? undefined : moment().add(7, 'days').toDate(),
     secure: config.secureCookies,
     path: '/',
   });
