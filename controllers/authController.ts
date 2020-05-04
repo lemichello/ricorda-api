@@ -15,6 +15,12 @@ interface IRefreshTokenResponse {
   accessToken: string;
 }
 
+interface ILoginRequest {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
 const googleAuthClient = new OAuth2Client(config.googleClientId);
 
 const registerUserWithGoogle = async (
@@ -31,7 +37,7 @@ const registerUserWithGoogle = async (
   try {
     let registeredUser = await User.create(newUser);
 
-    sendRefreshToken(res, createRefreshToken(registeredUser));
+    sendRefreshToken(res, createRefreshToken(registeredUser, false), false);
 
     logger.info(`Registered user with Google: ${email}`);
     return res.status(200).json({ token: createAccessToken(registeredUser) });
@@ -50,9 +56,20 @@ const registerUserWithGoogle = async (
 };
 
 export const logIn = async (req: Request, res: Response) => {
+  const { email, password, rememberMe }: ILoginRequest = req.body;
+
+  if (
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    typeof rememberMe !== 'boolean'
+  ) {
+    return res.status(400).send('Incorrect login credentials');
+  }
+
   try {
     const user = (await User.findOne({
       email: req.body.email,
+      password: { $ne: null },
     }).exec()) as IUserModel;
     const errorMessage =
       'You have entered incorrect email or password. Try again';
@@ -67,7 +84,7 @@ export const logIn = async (req: Request, res: Response) => {
       return res.status(400).send(errorMessage);
     }
 
-    sendRefreshToken(res, createRefreshToken(user));
+    sendRefreshToken(res, createRefreshToken(user, !rememberMe), !rememberMe);
 
     logger.info(`Logged in user with email: ${req.body.email}`);
     res.status(200).json({ token: createAccessToken(user) });
@@ -111,7 +128,7 @@ export const logInWithGoogle = async (req: Request, res: Response) => {
 
   // User is already registered.
   if (user) {
-    sendRefreshToken(res, createRefreshToken(user));
+    sendRefreshToken(res, createRefreshToken(user, false), false);
 
     logger.info(`Logged in user with Google: ${user.email}`);
     return res.status(200).json({ token: createAccessToken(user) });
@@ -125,7 +142,7 @@ export const logInWithGoogle = async (req: Request, res: Response) => {
 };
 
 export const logOut = (req: Request, res: Response) => {
-  sendRefreshToken(res, '');
+  sendRefreshToken(res, '', true);
   res.status(200).send('Successfully logged out');
 };
 
@@ -199,7 +216,11 @@ export const refreshToken = async (req: Request, res: Response) => {
     return res.json(response);
   }
 
-  sendRefreshToken(res, createRefreshToken(user));
+  sendRefreshToken(
+    res,
+    createRefreshToken(user, payload.isSessionToken),
+    payload.isSessionToken
+  );
 
   response = {
     ok: true,
