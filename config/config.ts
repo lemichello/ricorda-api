@@ -5,5 +5,6 @@ export default interface IConfig {
     refreshTokenSecret: string;
   };
   logDnaKey: string;
+  googleClientId: string;
   secureCookies: boolean;
 }
