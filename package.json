@@ -32,7 +32,7 @@
     "lodash": "^4.17.15",
     "logdna": "^3.5.0",
     "moment": "^2.25.3",
-    "mongoose": "^5.9.12",
+    "mongoose": "^5.9.13",
     "morgan": "~1.9.1",
     "typescript": "^3.8.3"
   }
