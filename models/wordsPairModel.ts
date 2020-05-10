@@ -7,6 +7,7 @@ interface IWordPairSchema extends Document {
   translation: string;
   repetitions: number;
   nextRepetitionDate: Date;
+  sentences: string[];
 }
 
 export interface IWordPairModel extends IWordPairSchema {}
@@ -36,6 +37,10 @@ let wordsPairSchema: Schema = new mongoose.Schema({
   },
   nextRepetitionDate: {
     type: Date,
+    required: true,
+  },
+  sentences: {
+    type: [String],
     required: true,
   },
 });
