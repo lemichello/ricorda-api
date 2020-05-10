@@ -104,7 +104,13 @@ export const updateWordsPair = async (req: Request, res: Response) => {
     const updatedDoc = await WordPair.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       {
-        ...pick(req.body, ['translation', 'sourceWord', 'sentences']),
+        ...pick(req.body, [
+          'translation',
+          'sourceWord',
+          'sentences',
+          'nextRepetitionDate',
+          'repetitions',
+        ]),
       },
       { new: true }
     )
