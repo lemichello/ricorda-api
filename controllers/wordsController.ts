@@ -2,6 +2,7 @@ import { WordPair } from '../models/wordsPairModel';
 import shuffle from 'lodash/shuffle';
 import logger from '../services/loggingService';
 import { Request, Response } from 'express';
+import pick from 'lodash/pick';
 
 const pageSize = 15;
 
@@ -12,10 +13,8 @@ export const createPair = async (req: Request, res: Response) => {
     nextRepetitionDate.setDate(nextRepetitionDate.getDate() + 1);
 
     let wordsPair = await WordPair.create({
-      sourceWord: req.body.sourceWord,
-      translation: req.body.translation,
+      ...pick(req.body, ['sourceWord', 'translation', 'sentences']),
       nextRepetitionDate,
-      sentences: req.body.sentences,
       userId: req.user._id,
     });
 
@@ -105,9 +104,7 @@ export const updateWordsPair = async (req: Request, res: Response) => {
     const updatedDoc = await WordPair.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       {
-        translation: req.body.translation,
-        sourceWord: req.body.sourceWord,
-        sentences: req.body.sentences,
+        ...pick(req.body, ['translation', 'sourceWord', 'sentences']),
       },
       { new: true }
     )
