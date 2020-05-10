@@ -12,8 +12,10 @@ export const createPair = async (req: Request, res: Response) => {
     nextRepetitionDate.setDate(nextRepetitionDate.getDate() + 1);
 
     let wordsPair = await WordPair.create({
-      ...req.body,
+      sourceWord: req.body.sourceWord,
+      translation: req.body.translation,
       nextRepetitionDate,
+      sentences: req.body.sentences,
       userId: req.user._id,
     });
 
@@ -102,7 +104,11 @@ export const updateWordsPair = async (req: Request, res: Response) => {
   try {
     const updatedDoc = await WordPair.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      req.body,
+      {
+        translation: req.body.translation,
+        sourceWord: req.body.sourceWord,
+        sentences: req.body.sentences,
+      },
       { new: true }
     )
       .lean()
