@@ -3,6 +3,7 @@ import { User, IUserModel } from '../models/userModel';
 import { sign, verify } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import moment from 'moment';
+import { sendVerificationEmail } from './emailService';
 
 export const createAccessToken: (user: IUserModel) => string = function (
   user: IUserModel
@@ -71,4 +72,28 @@ export const protect = async function (
 
   req.user = user;
   next();
+};
+
+export const sendVerificationEmailWithJwt = (
+  userId: string,
+  email: string,
+  req: Request
+) => {
+  sign(
+    {
+      id: userId,
+      email: email,
+    },
+    config.secrets.emailSecret,
+    {
+      expiresIn: '30m',
+    },
+    (_, emailToken) => {
+      const url = `${req.protocol}://${req.get(
+        'host'
+      )}/auth/verify-email/${emailToken}`;
+
+      sendVerificationEmail(email, url);
+    }
+  );
 };

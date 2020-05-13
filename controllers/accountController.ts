@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
 import logger from '../services/loggingService';
+import {
+  sendRefreshToken,
+  sendVerificationEmailWithJwt,
+} from '../services/authService';
 
 export const updatePassword = async (req: Request, res: Response) => {
   let { oldPassword, newPassword } = req.body;
@@ -40,8 +44,12 @@ export const updateEmail = async (req: Request, res: Response) => {
 
   try {
     req.user.email = newEmail;
+    req.user.isVerified = false;
 
     await req.user.save();
+
+    sendVerificationEmailWithJwt(req.user.id, req.user.email, req);
+    sendRefreshToken(res, '', true);
   } catch (e) {
     if (e.errmsg.includes('duplicate')) {
       return res
@@ -65,6 +73,8 @@ export const revokeRefreshToken = async function (req: Request, res: Response) {
   req.user.tokenVersion++;
 
   await req.user.save();
+
+  sendRefreshToken(res, '', true);
 
   logger.info(`Revoked access token for user: ${req.user.id}`);
   res.status(200).send('Successfully revoked refresh token');
