@@ -1,19 +1,25 @@
-import { WordPair } from '../models/wordsPairModel';
+import { WordPair, IWordPairModel } from '../models/wordsPairModel';
 import shuffle from 'lodash/shuffle';
 import logger from '../services/loggingService';
 import { Request, Response } from 'express';
 import pick from 'lodash/pick';
+import moment from 'moment';
+import { Types } from 'mongoose';
 
 const pageSize = 15;
 
 export const createPair = async (req: Request, res: Response) => {
   try {
-    let nextRepetitionDate = new Date();
-
-    nextRepetitionDate.setDate(nextRepetitionDate.getDate() + 1);
+    let nextRepetitionDate = moment().add(req.body.repetitionInterval, 'hours');
 
     let wordsPair = await WordPair.create({
-      ...pick(req.body, ['sourceWord', 'translation', 'sentences']),
+      ...pick(req.body, [
+        'sourceWord',
+        'translation',
+        'sentences',
+        'repetitionInterval',
+        'maxRepetitions',
+      ]),
       nextRepetitionDate,
       userId: req.user._id,
     });
@@ -32,11 +38,29 @@ export const createPair = async (req: Request, res: Response) => {
 export const getWordsForRepeating = async (req: Request, res: Response) => {
   try {
     let todayDate = new Date();
-    let words = await WordPair.find({
-      userId: req.user._id,
-      nextRepetitionDate: { $lte: todayDate },
-      repetitions: { $lt: 5 },
-    });
+
+    let words = await WordPair.aggregate()
+      .match({
+        userId: Types.ObjectId(req.user.id),
+        nextRepetitionDate: { $lte: todayDate },
+      })
+      .project({
+        repetitionsCmp: { $cmp: ['$repetitions', '$maxRepetitions'] },
+        repetitions: 1,
+        sourceWord: 1,
+        translation: 1,
+        nextRepetitionDate: 1,
+        maxRepetitions: 1,
+        repetitionInterval: 1,
+        sentences: 1,
+      })
+      .match({
+        repetitionsCmp: -1,
+      })
+      .project({
+        repetitionsCmp: 0,
+      })
+      .exec();
 
     words = shuffle(words);
 
@@ -70,6 +94,7 @@ export const getSavedWords = async (req: Request, res: Response) => {
       .limit(pageSize)
       .skip((page - 1) * pageSize)
       .sort({ repetitions: 1, sourceWord: 1 })
+      .select('-userId -__v -repetitionInterval')
       .lean()
       .exec(),
     WordPair.find({ userId: req.user._id })
@@ -135,14 +160,22 @@ export const updateWordsPair = async (req: Request, res: Response) => {
 export const getWordsCount = async (req: Request, res: Response) => {
   try {
     let todayDate = new Date();
-    const count = await WordPair.countDocuments({
-      userId: req.user._id,
-      nextRepetitionDate: { $lte: todayDate },
-      repetitions: { $lt: 5 },
-    });
+    const result = await WordPair.aggregate()
+      .match({
+        userId: Types.ObjectId(req.user.id),
+        nextRepetitionDate: { $lte: todayDate },
+      })
+      .project({
+        repetitionsCmp: { $cmp: ['$repetitions', '$maxRepetitions'] },
+      })
+      .match({
+        repetitionsCmp: -1,
+      })
+      .count('documentsCount')
+      .exec();
 
     logger.info(`Sent words count for user: ${req.user._id}`);
-    res.status(200).json({ data: count });
+    res.status(200).json({ data: result[0].documentsCount });
   } catch (e) {
     logger.error(`Can't send words count: ${e}`, {
       userId: req.user._id,
