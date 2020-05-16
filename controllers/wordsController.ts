@@ -175,7 +175,7 @@ export const getWordsCount = async (req: Request, res: Response) => {
       .exec();
 
     logger.info(`Sent words count for user: ${req.user._id}`);
-    res.status(200).json({ data: result[0].documentsCount });
+    res.status(200).json({ data: result[0]?.documentsCount || 0 });
   } catch (e) {
     logger.error(`Can't send words count: ${e}`, {
       userId: req.user._id,
