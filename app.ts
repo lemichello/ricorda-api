@@ -13,7 +13,7 @@ import cors from 'cors';
 var app = express();
 
 const whitelist = [
-  'https://ricorda-cfbe2.web.app',
+  'https://ricorda.web.app',
   'https://ricorda-stage.web.app',
   'http://localhost:3001',
   'http://localhost:5000',
