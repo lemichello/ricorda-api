@@ -7,8 +7,10 @@ import {
   sendRefreshToken,
   createRefreshToken,
   createAccessToken,
+  sendVerificationEmailWithJwt,
 } from '../services/authService';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
+import jwtDecode from 'jwt-decode';
 
 interface IRefreshTokenResponse {
   ok: boolean;
@@ -84,6 +86,11 @@ export const logIn = async (req: Request, res: Response) => {
       return res.status(400).send(errorMessage);
     }
 
+    if (!user.isVerified) {
+      sendVerificationEmailWithJwt(user.id, user.email, req);
+      return res.status(403).json({ email: email });
+    }
+
     sendRefreshToken(res, createRefreshToken(user, !rememberMe), !rememberMe);
 
     logger.info(`Logged in user with email: ${req.body.email}`);
@@ -154,13 +161,15 @@ export const signUp = async (req: Request, res: Response) => {
   }
 
   try {
-    await User.create({
+    const user = await User.create({
       email: email,
       password: password,
     });
 
+    sendVerificationEmailWithJwt(user.id, user.email, req);
+
     logger.info(`Signed up user with email: ${req.body.email}`);
-    res.status(201).send('Successfully created new word pair');
+    res.status(201).send('Successfully signed up');
   } catch (e) {
     if (e.errmsg.includes('duplicate')) {
       return res
@@ -172,6 +181,62 @@ export const signUp = async (req: Request, res: Response) => {
       requestData: req.body,
     });
     res.status(500).send('Internal server error');
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  if (!req.params.token) {
+    return res.status(400).send('Not received token');
+  }
+
+  try {
+    const payload: any = verify(req.params.token, config.secrets.emailSecret);
+
+    await User.findOneAndUpdate(
+      { _id: payload.id },
+      { isVerified: true },
+      { new: true }
+    );
+
+    logger.info(`Verified email for user: ${payload.id}`);
+    res.redirect(`${config.webApplicationUrl}/login/?verified=true`);
+  } catch (e) {
+    try {
+      const payload: any = jwtDecode(req.params.token);
+      res.redirect(
+        `${config.webApplicationUrl}/signup/verify/?email=${payload.email}&failed=true`
+      );
+    } catch (e) {
+      res.status(400).send('Received incorrect token');
+    }
+  }
+};
+
+export const resendEmailVerification = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({
+      email: email,
+      isVerified: false,
+    }).exec();
+
+    if (user === null) {
+      return res
+        .status(400)
+        .send(
+          `User with provided email doesn't exist or it is already verified`
+        );
+    }
+
+    sendVerificationEmailWithJwt(user.id, user.email, req);
+
+    logger.info(
+      `Resent verification email to user with email: ${req.body.email}`
+    );
+    res.status(200).send('Successfully resent verification email');
+  } catch (e) {
+    res.status(400).send('Received incorrect email address');
   }
 };
 

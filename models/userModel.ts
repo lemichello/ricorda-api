@@ -5,6 +5,7 @@ interface IUserSchema extends Document {
   _id: string;
   email: string;
   password: string | null;
+  isVerified: boolean;
   tokenVersion: number;
   externalType: 'Google' | null;
   externalId: string | null;
@@ -25,6 +26,11 @@ const userSchema: Schema = new mongoose.Schema({
   },
   password: {
     type: String,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+    required: true,
   },
   tokenVersion: {
     type: Number,

@@ -2,9 +2,18 @@ import IConfig from './config';
 
 const devConfig: IConfig = {
   dbUrl: 'mongodb://localhost:27017/ricorda',
+  webApplicationUrl: 'http://localhost:3001',
+  emailSenderAccount: {
+    user: 'hosea.homenick39@ethereal.email',
+    password: 'U1qZTkQaugHCSHSYYB',
+    service: undefined,
+    host: 'smtp.ethereal.email',
+    port: 587,
+  },
   secrets: {
     accessTokenSecret: 'optvBdTsFDFhV4KwfCBxPa',
     refreshTokenSecret: 'n7UU9prJefTBV6YbAPWTMZ',
+    emailSecret: 'KkuFqs9jNoA3tqPJez4X3j',
   },
   logDnaKey: '',
   googleClientId:
