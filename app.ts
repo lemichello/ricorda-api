@@ -7,7 +7,7 @@ import authRouter from './src/api/routes/authRouter';
 import wordsRouter from './src/api/routes/wordsRouter';
 import accountRouter from './src/api/routes/accountRouter';
 
-import { protect } from './src/services/authService';
+import { protect } from './src/helpers/authHelper';
 import cors from 'cors';
 
 var app = express();

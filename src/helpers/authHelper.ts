@@ -3,7 +3,7 @@ import { User, IUserModel } from '../models/userModel';
 import { sign, verify } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import moment from 'moment';
-import { sendVerificationEmail } from './emailService';
+import { sendVerificationEmail } from './emailHelper';
 
 export const createAccessToken: (user: IUserModel) => string = function (
   user: IUserModel

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import logger from '../../services/loggingService';
+import logger from '../../helpers/loggingHelper';
 import {
   sendRefreshToken,
   sendVerificationEmailWithJwt,
-} from '../../services/authService';
+} from '../../helpers/authHelper';
 
 export const updatePassword = async (req: Request, res: Response) => {
   let { oldPassword, newPassword } = req.body;

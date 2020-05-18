@@ -1,5 +1,5 @@
 import { User, IUserModel } from '../../models/userModel';
-import logger from '../../services/loggingService';
+import logger from '../../helpers/loggingHelper';
 import { Request, Response } from 'express';
 import { verify } from 'jsonwebtoken';
 import config from '../../config';
@@ -8,7 +8,7 @@ import {
   createRefreshToken,
   createAccessToken,
   sendVerificationEmailWithJwt,
-} from '../../services/authService';
+} from '../../helpers/authHelper';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import jwtDecode from 'jwt-decode';
 

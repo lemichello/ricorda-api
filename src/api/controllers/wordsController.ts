@@ -1,6 +1,6 @@
-import { WordPair, IWordPairModel } from '../../models/wordsPairModel';
+import { WordPair } from '../../models/wordsPairModel';
 import shuffle from 'lodash/shuffle';
-import logger from '../../services/loggingService';
+import logger from '../../helpers/loggingHelper';
 import { Request, Response } from 'express';
 import pick from 'lodash/pick';
 import moment from 'moment';
