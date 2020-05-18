@@ -3,11 +3,11 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 
-import authRouter from './routes/authRouter';
-import wordsRouter from './routes/wordsRouter';
-import accountRouter from './routes/accountRouter';
+import authRouter from './src/api/routes/authRouter';
+import wordsRouter from './src/api/routes/wordsRouter';
+import accountRouter from './src/api/routes/accountRouter';
 
-import { protect } from './services/authService';
+import { protect } from './src/services/authService';
 import cors from 'cors';
 
 var app = express();

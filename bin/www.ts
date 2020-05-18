@@ -6,7 +6,7 @@
 
 import app from '../app';
 import http from 'http';
-import connectToDb from '../services/dbService';
+import connectToDb from '../src/services/dbService';
 import debug from 'debug';
 
 const serverDebug = debug('ricorda-api:server');
