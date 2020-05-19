@@ -9,15 +9,6 @@ import { IAuthService } from '../../services/interfaces/IAuthService';
 
 export const logIn = async (req: Request, res: Response) => {
   const { email, password, rememberMe } = req.body;
-
-  if (
-    typeof email !== 'string' ||
-    typeof password !== 'string' ||
-    typeof rememberMe !== 'boolean'
-  ) {
-    return res.status(400).send('Incorrect login credentials');
-  }
-
   const authService = req.scope.resolve<IAuthService>('authService');
 
   try {
@@ -65,11 +56,6 @@ export const logOut = (req: Request, res: Response) => {
 
 export const signUp = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-
-  if (typeof email !== 'string' || typeof password !== 'string') {
-    return res.status(400).send('Incorrect type of email or password');
-  }
-
   const authService = req.scope.resolve<IAuthService>('authService');
 
   try {
@@ -84,11 +70,6 @@ export const signUp = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
   const { token } = req.params;
-
-  if (!token) {
-    return res.status(400).send('Not received token');
-  }
-
   const authService = req.scope.resolve<IAuthService>('authService');
 
   try {

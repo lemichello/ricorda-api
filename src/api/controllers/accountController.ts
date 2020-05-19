@@ -4,11 +4,6 @@ import { IAccountService } from '../../services/interfaces/IAccountService';
 
 export const updatePassword = async (req: Request, res: Response) => {
   let { oldPassword, newPassword } = req.body;
-
-  if (typeof oldPassword !== 'string' || typeof newPassword !== 'string') {
-    return res.status(400).send('Incorrect type of old or new passwords');
-  }
-
   const accountService = req.scope.resolve<IAccountService>('accountService');
 
   try {
@@ -22,11 +17,6 @@ export const updatePassword = async (req: Request, res: Response) => {
 
 export const updateEmail = async (req: Request, res: Response) => {
   let { newEmail } = req.body;
-
-  if (typeof newEmail !== 'string') {
-    return res.status(400).send('Incorrect type of new email');
-  }
-
   const accountService = req.scope.resolve<IAccountService>('accountService');
 
   let url = `${req.protocol}://${req.get('host')}/auth/verify-email`;

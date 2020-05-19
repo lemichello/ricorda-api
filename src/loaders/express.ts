@@ -8,7 +8,7 @@ import wordsRouter from '../api/routes/wordsRouter';
 import accountRouter from '../api/routes/accountRouter';
 
 import protect from '../api/middlewares/protect';
-import { AwilixContainer } from 'awilix';
+import { errors } from 'celebrate';
 
 export default (app: express.Application) => {
   const whitelist = [
@@ -39,4 +39,6 @@ export default (app: express.Application) => {
   app.use('/api', protect);
   app.use('/api/words', wordsRouter);
   app.use('/api/account', accountRouter);
+
+  app.use(errors());
 };
