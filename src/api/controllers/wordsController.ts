@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import pick from 'lodash/pick';
 import { IWordsService } from '../../services/interfaces/IWordsService';
 
 export const createPair = async (req: Request, res: Response) => {

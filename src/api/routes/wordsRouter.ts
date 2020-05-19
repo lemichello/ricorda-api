@@ -7,8 +7,7 @@ import {
   existsWordPair,
   getSavedWords,
 } from '../controllers/wordsController';
-import { celebrate } from 'celebrate';
-import Joi from '@hapi/joi';
+import { celebrate, Joi } from 'celebrate';
 
 const router = Router();
 
