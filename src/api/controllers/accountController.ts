@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
-import logger from '../../helpers/loggingHelper';
-import {
-  sendRefreshToken,
-  sendVerificationEmailWithJwt,
-} from '../../helpers/authHelper';
+import { sendRefreshToken } from '../../helpers/authHelper';
+import { IAccountService } from '../../services/interfaces/IAccountService';
 
 export const updatePassword = async (req: Request, res: Response) => {
   let { oldPassword, newPassword } = req.body;
@@ -12,27 +9,15 @@ export const updatePassword = async (req: Request, res: Response) => {
     return res.status(400).send('Incorrect type of old or new passwords');
   }
 
-  let correctOldPassword = await req.user.checkPassword(oldPassword);
-
-  if (!correctOldPassword) {
-    return res.status(400).send('Incorrect old password');
-  }
+  const accountService = req.scope.resolve<IAccountService>('accountService');
 
   try {
-    req.user.password = newPassword;
-    await req.user.save();
+    await accountService.UpdatePassword(req.user, oldPassword, newPassword);
+
+    res.status(200).send('Successfully updated password');
   } catch (e) {
-    logger.error(`Can't update password for user: ${e}`, {
-      userId: req.user._id,
-      oldPassword: oldPassword,
-      newPassword: newPassword,
-    });
-
-    return res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
-
-  logger.info(`Changed password for user: ${req.user._id}`);
-  res.status(200).send('Successfully updated password');
 };
 
 export const updateEmail = async (req: Request, res: Response) => {
@@ -42,40 +27,29 @@ export const updateEmail = async (req: Request, res: Response) => {
     return res.status(400).send('Incorrect type of new email');
   }
 
+  const accountService = req.scope.resolve<IAccountService>('accountService');
+
+  let url = `${req.protocol}://${req.get('host')}/auth/verify-email`;
+
   try {
-    req.user.email = newEmail;
-    req.user.isVerified = false;
+    await accountService.UpdateEmail(req.user, newEmail, url);
 
-    await req.user.save();
-
-    sendVerificationEmailWithJwt(req.user.id, req.user.email, req);
-    sendRefreshToken(res, '', true);
+    res.status(200).send('Successfully updated email');
   } catch (e) {
-    if (e.errmsg.includes('duplicate')) {
-      return res
-        .status(400)
-        .send('This email is already taken. Try another one');
-    }
-
-    logger.error(`Can't update email for user: ${e}`, {
-      userId: req.user._id,
-      newEmail: newEmail,
-    });
-
-    return res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
-
-  logger.info(`Changed email for user: ${req.user._id}`);
-  res.status(200).send('Successfully updated email');
 };
 
 export const revokeRefreshToken = async function (req: Request, res: Response) {
-  req.user.tokenVersion++;
+  const accountService = req.scope.resolve<IAccountService>('accountService');
 
-  await req.user.save();
+  try {
+    await accountService.RevokeToken(req.user);
 
-  sendRefreshToken(res, '', true);
+    sendRefreshToken(res, '', true);
 
-  logger.info(`Revoked access token for user: ${req.user.id}`);
-  res.status(200).send('Successfully revoked refresh token');
+    res.status(200).send('Successfully revoked refresh token');
+  } catch (e) {
+    res.status(e.status).send(e.message);
+  }
 };

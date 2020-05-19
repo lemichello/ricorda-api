@@ -1,25 +1,25 @@
 import config from '../config/index';
-import { User, IUserModel } from '../models/userModel';
-import { sign, verify } from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
+import { sign } from 'jsonwebtoken';
+import { Response } from 'express';
 import moment from 'moment';
 import { sendVerificationEmail } from './emailHelper';
+import { IUser } from '../interfaces/IUser';
 
-export const createAccessToken: (user: IUserModel) => string = function (
-  user: IUserModel
+export const createAccessToken: (user: IUser) => string = function (
+  user: IUser
 ) {
-  return sign({ id: user.id }, config.secrets.accessTokenSecret, {
+  return sign({ id: user._id }, config.secrets.accessTokenSecret, {
     expiresIn: '15m',
   });
 };
 
 export const createRefreshToken: (
-  user: IUserModel,
+  user: IUser,
   isSessionToken: boolean
-) => string = function (user: IUserModel, isSessionToken: boolean) {
+) => string = function (user: IUser, isSessionToken: boolean) {
   return sign(
     {
-      id: user.id,
+      id: user._id,
       tokenVersion: user.tokenVersion,
       isSessionToken: isSessionToken,
     },
@@ -44,40 +44,10 @@ export const sendRefreshToken: (
   });
 };
 
-export const protect = async function (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const bearer = req.headers.authorization;
-
-  if (!bearer || !bearer.startsWith('Bearer ')) {
-    return res.status(401).send("Bearer token isn't provided");
-  }
-
-  let payload: any;
-  const token = bearer.split('Bearer ')[1].trim();
-
-  try {
-    payload = verify(token, config.secrets.accessTokenSecret);
-  } catch (e) {
-    return res.status(401).send('Incorrect access token');
-  }
-
-  const user = (await User.findById(payload.id).exec()) as IUserModel;
-
-  if (!user) {
-    return res.status(401).send('Incorrect access token');
-  }
-
-  req.user = user;
-  next();
-};
-
 export const sendVerificationEmailWithJwt = (
   userId: string,
   email: string,
-  req: Request
+  url: string
 ) => {
   sign(
     {
@@ -89,11 +59,7 @@ export const sendVerificationEmailWithJwt = (
       expiresIn: '30m',
     },
     (_, emailToken) => {
-      const url = `${req.protocol}://${req.get(
-        'host'
-      )}/auth/verify-email/${emailToken}`;
-
-      sendVerificationEmail(email, url);
+      sendVerificationEmail(email, `${url}/${emailToken}`);
     }
   );
 };

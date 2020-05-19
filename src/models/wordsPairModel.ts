@@ -58,7 +58,4 @@ let wordsPairSchema: Schema = new mongoose.Schema({
   },
 });
 
-export const WordPair = mongoose.model<IWordPairModel>(
-  'wordsPair',
-  wordsPairSchema
-);
+export default mongoose.model<IWordPairModel>('wordsPair', wordsPairSchema);

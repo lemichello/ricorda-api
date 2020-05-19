@@ -1,209 +1,115 @@
-import { WordPair } from '../../models/wordsPairModel';
-import shuffle from 'lodash/shuffle';
-import logger from '../../helpers/loggingHelper';
 import { Request, Response } from 'express';
 import pick from 'lodash/pick';
-import moment from 'moment';
-import { Types } from 'mongoose';
+import { IWordsService } from '../../services/interfaces/IWordsService';
 
 const pageSize = 15;
 
 export const createPair = async (req: Request, res: Response) => {
+  let wordPair = pick(req.body, [
+    'sourceWord',
+    'translation',
+    'sentences',
+    'repetitionInterval',
+    'maxRepetitions',
+  ]);
+  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+
   try {
-    let nextRepetitionDate = moment().add(req.body.repetitionInterval, 'hours');
+    let newWordPair = await wordsService.CreateWordPair(req.user.id, wordPair);
 
-    let wordsPair = await WordPair.create({
-      ...pick(req.body, [
-        'sourceWord',
-        'translation',
-        'sentences',
-        'repetitionInterval',
-        'maxRepetitions',
-      ]),
-      nextRepetitionDate,
-      userId: req.user._id,
-    });
-
-    logger.info(`Created new word pair for user: ${req.user._id}`);
-    res.status(201).json({ data: wordsPair });
+    res.status(200).json({ data: newWordPair });
   } catch (e) {
-    logger.error(`Can't create new word pair: ${e}`, {
-      userId: req.user._id,
-      requestData: req.body,
-    });
-    res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
 };
 
 export const getWordsForRepeating = async (req: Request, res: Response) => {
+  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+
   try {
-    let todayDate = new Date();
+    let words = await wordsService.GetWordsForRepeating(req.user.id);
 
-    let words = await WordPair.aggregate()
-      .match({
-        userId: Types.ObjectId(req.user.id),
-        nextRepetitionDate: { $lte: todayDate },
-      })
-      .project({
-        repetitionsCmp: { $cmp: ['$repetitions', '$maxRepetitions'] },
-        repetitions: 1,
-        sourceWord: 1,
-        translation: 1,
-        nextRepetitionDate: 1,
-        maxRepetitions: 1,
-        repetitionInterval: 1,
-        sentences: 1,
-      })
-      .match({
-        repetitionsCmp: -1,
-      })
-      .project({
-        repetitionsCmp: 0,
-      })
-      .exec();
-
-    words = shuffle(words);
-
-    logger.info(`Sent words for repeating to user: ${req.user._id}`);
     res.status(200).json({ data: words });
   } catch (e) {
-    logger.error(`Can't get words for repeating: ${e}`, {
-      userId: req.user._id,
-    });
-    res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
 };
 
 export const getSavedWords = async (req: Request, res: Response) => {
   const page = Number.parseInt(req.params.page);
+  const { word } = req.body;
 
   if (!page) {
-    return res.status(400).send('Improper page value');
+    res.status(400).send('Improper page value');
   }
 
-  if (typeof req.body.word !== 'string') {
-    return res.status(400).send('Searching word needs to be of string type');
+  if (typeof word !== 'string') {
+    res.status(400).send('Searching word needs to be of string type');
   }
 
-  Promise.all([
-    WordPair.find({ userId: req.user._id })
-      .or([
-        { sourceWord: { $regex: req.body.word, $options: 'i' } },
-        { translation: { $regex: req.body.word, $options: 'i' } },
-      ])
-      .limit(pageSize)
-      .skip((page - 1) * pageSize)
-      .sort({ repetitions: 1, sourceWord: 1 })
-      .select('-userId -__v -repetitionInterval')
-      .lean()
-      .exec(),
-    WordPair.find({ userId: req.user._id })
-      .or([
-        { sourceWord: { $regex: req.body.word, $options: 'i' } },
-        { translation: { $regex: req.body.word, $options: 'i' } },
-      ])
-      .countDocuments(),
-  ])
-    .then(([words, count]) => {
-      const next = count > pageSize * page;
+  const wordsService = req.scope.resolve<IWordsService>('wordsService');
 
-      logger.info(`Sent saved words for user: ${req.user._id}`);
+  try {
+    let words = await wordsService.GetSavedWords(page, word, req.user.id);
 
-      res.status(200).json({
-        data: words,
-        page,
-        next,
-      });
-    })
-    .catch((e) => {
-      logger.error(`Can't send saved words: ${e}`, {
-        userId: req.user._id,
-        requestData: req.body,
-      });
-      res.status(500).send('Internal server error');
-    });
+    res.status(200).json(words);
+  } catch (e) {
+    res.status(e.status).send(e.message);
+  }
 };
 
 export const updateWordsPair = async (req: Request, res: Response) => {
+  let wordPair = pick(req.body, [
+    'translation',
+    'sourceWord',
+    'sentences',
+    'nextRepetitionDate',
+    'repetitions',
+  ]);
+
+  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+
   try {
-    const updatedDoc = await WordPair.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      {
-        ...pick(req.body, [
-          'translation',
-          'sourceWord',
-          'sentences',
-          'nextRepetitionDate',
-          'repetitions',
-        ]),
-      },
-      { new: true }
-    )
-      .lean()
-      .exec();
+    let updatedWordPair = await wordsService.UpdateWordPair(
+      wordPair,
+      req.params.id,
+      req.user.id
+    );
 
-    if (!updatedDoc) {
-      return res.status(400).send('Received incorrect word pair');
-    }
-
-    logger.info(`Updated word pair for user: ${req.user._id}`);
-    res.status(200).json({ data: updatedDoc });
+    res.status(200).json({ data: updatedWordPair });
   } catch (e) {
-    logger.error(`Can't update word pair: ${e}`, {
-      userId: req.user._id,
-      requestData: req.body,
-    });
-    res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
 };
 
 export const getWordsCount = async (req: Request, res: Response) => {
-  try {
-    let todayDate = new Date();
-    const result = await WordPair.aggregate()
-      .match({
-        userId: Types.ObjectId(req.user.id),
-        nextRepetitionDate: { $lte: todayDate },
-      })
-      .project({
-        repetitionsCmp: { $cmp: ['$repetitions', '$maxRepetitions'] },
-      })
-      .match({
-        repetitionsCmp: -1,
-      })
-      .count('documentsCount')
-      .exec();
+  const wordsService = req.scope.resolve<IWordsService>('wordsService');
 
-    logger.info(`Sent words count for user: ${req.user._id}`);
-    res.status(200).json({ data: result[0]?.documentsCount || 0 });
+  try {
+    let count = await wordsService.GetWordsCount(req.user.id);
+
+    res.status(200).json({ data: count });
   } catch (e) {
-    logger.error(`Can't send words count: ${e}`, {
-      userId: req.user._id,
-      requestData: req.body,
-    });
-    res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
 };
 
 export const existsWordPair = async (req: Request, res: Response) => {
-  try {
-    if (typeof req.body.sourceWord !== 'string') {
-      return res
-        .status(400)
-        .send("You need to send source word in '{sourceWord: '...'}' format");
-    }
-    const exists = await WordPair.exists({
-      userId: req.user._id,
-      sourceWord: req.body.sourceWord,
-    });
+  let { sourceWord } = req.body;
 
-    logger.info(`Sent word pair existence result to user: ${req.user._id}`);
+  if (typeof sourceWord !== 'string') {
+    return res
+      .status(400)
+      .send("You need to send source word in '{sourceWord: '...'}' format");
+  }
+
+  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+
+  try {
+    let exists = await wordsService.WordPairExists(sourceWord, req.user.id);
+
     res.status(200).json({ data: exists });
   } catch (e) {
-    logger.error(`Can't send word pair existence result: ${e}`, {
-      userId: req.user._id,
-      requestData: req.body,
-    });
-    res.status(500).send('Internal server error');
+    res.status(e.status).send(e.message);
   }
 };

@@ -77,4 +77,4 @@ userSchema.methods.checkPassword = function (
   });
 };
 
-export const User = mongoose.model<IUserModel>('user', userSchema);
+export default mongoose.model<IUserModel>('user', userSchema);
