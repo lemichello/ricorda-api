@@ -1,7 +1,8 @@
 import logger from '../helpers/loggingHelper';
 import { IUserModel } from '../models/userModel';
-import { sendVerificationEmailWithJwt } from '../helpers/authHelper';
 import { IAccountService } from './interfaces/IAccountService';
+import PubSub from 'pubsub-js';
+import events from '../subscribers/events';
 
 export default class AccountService implements IAccountService {
   public async UpdatePassword(
@@ -38,18 +39,14 @@ export default class AccountService implements IAccountService {
     }
   }
 
-  public async UpdateEmail(
-    user: IUserModel,
-    newEmail: string,
-    url: string
-  ): Promise<void> {
+  public async UpdateEmail(user: IUserModel, newEmail: string): Promise<void> {
     try {
       user.email = newEmail;
       user.isVerified = false;
 
       await user.save();
 
-      sendVerificationEmailWithJwt(user.id, user.email, url);
+      PubSub.publish(events.user.UPDATED_EMAIL, { user });
 
       logger.info(`Changed email for user: ${user._id}`);
     } catch (e) {

@@ -2,7 +2,7 @@ import express from 'express';
 import mongooseLoader from './mongoose';
 import expressLoader from './express';
 import dependencyInjector from './dependencyInjector';
-import UserModel from '../models/userModel';
+import './events';
 
 export default async (express: express.Application) => {
   await mongooseLoader();

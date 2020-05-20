@@ -10,6 +10,8 @@ import {
   sendVerificationEmailWithJwt,
 } from '../helpers/authHelper';
 import { IRefreshTokenResponse, IAuthService } from './interfaces/IAuthService';
+import events from '../subscribers/events';
+import PubSub from 'pubsub-js';
 
 export default class AuthService implements IAuthService {
   private googleOauthClient: OAuth2Client;
@@ -94,6 +96,8 @@ export default class AuthService implements IAuthService {
         };
       }
 
+      PubSub.publish(events.user.LOGGED_IN, { user });
+
       logger.info(`Logged in user with email: ${email}`);
 
       return user;
@@ -113,18 +117,14 @@ export default class AuthService implements IAuthService {
     }
   }
 
-  public async SignUp(
-    email: string,
-    password: string,
-    url: string
-  ): Promise<IUser> {
+  public async SignUp(email: string, password: string): Promise<IUser> {
     try {
       const user = await this.userModel.create({
         email: email,
         password: password,
       });
 
-      sendVerificationEmailWithJwt(user._id, user.email, url);
+      PubSub.publish(events.user.SIGNED_UP, { user });
 
       logger.info(`Signed up user with email: ${email}`);
 
@@ -163,7 +163,7 @@ export default class AuthService implements IAuthService {
       try {
         const payload: any = jwtDecode(token);
 
-        logger.info(`Verified email for user: ${payload.id}`);
+        logger.info(`Failed to verify email for user: ${payload.id}`);
 
         return `${config.webApplicationUrl}/signup/verify/?email=${payload.email}&failed=true`;
       } catch (e) {
@@ -175,10 +175,7 @@ export default class AuthService implements IAuthService {
     }
   }
 
-  public async GetUserForEmailVerification(
-    email: string,
-    url: string
-  ): Promise<IUser> {
+  public async ResendVerificationEmail(email: string): Promise<IUser> {
     try {
       const user = await this.userModel
         .findOne({
@@ -193,6 +190,8 @@ export default class AuthService implements IAuthService {
           message: `User with provided email doesn't exist or it is already verified`,
         };
       }
+
+      const url = `${config.apiRootUrl}/auth/verify-email`;
 
       sendVerificationEmailWithJwt(user._id, user.email, url);
 

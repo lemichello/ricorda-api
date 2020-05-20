@@ -3,6 +3,7 @@ import IConfig from './config';
 const devConfig: IConfig = {
   dbUrl: 'mongodb://localhost:27017/ricorda',
   webApplicationUrl: 'http://localhost:3001',
+  apiRootUrl: 'http://localhost:3000',
   emailSenderAccount: {
     user: 'hosea.homenick39@ethereal.email',
     password: 'U1qZTkQaugHCSHSYYB',

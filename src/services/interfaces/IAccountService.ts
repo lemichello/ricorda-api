@@ -6,6 +6,6 @@ export interface IAccountService {
     oldPassword: string,
     newPassword: string
   ): Promise<void>;
-  UpdateEmail(user: IUserModel, newEmail: string, url: string): Promise<void>;
+  UpdateEmail(user: IUserModel, newEmail: string): Promise<void>;
   RevokeToken(user: IUserModel): Promise<void>;
 }

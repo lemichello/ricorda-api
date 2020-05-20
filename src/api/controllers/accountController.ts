@@ -19,10 +19,8 @@ export const updateEmail = async (req: Request, res: Response) => {
   let { newEmail } = req.body;
   const accountService = req.scope.resolve<IAccountService>('accountService');
 
-  let url = `${req.protocol}://${req.get('host')}/auth/verify-email`;
-
   try {
-    await accountService.UpdateEmail(req.user, newEmail, url);
+    await accountService.UpdateEmail(req.user, newEmail);
 
     res.status(200).send('Successfully updated email');
   } catch (e) {

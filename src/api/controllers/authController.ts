@@ -3,7 +3,6 @@ import {
   sendRefreshToken,
   createRefreshToken,
   createAccessToken,
-  sendVerificationEmailWithJwt,
 } from '../../helpers/authHelper';
 import { IAuthService } from '../../services/interfaces/IAuthService';
 
@@ -15,9 +14,6 @@ export const logIn = async (req: Request, res: Response) => {
     let user = await authService.LogIn(email, password);
 
     if (!user.isVerified) {
-      let url = `${req.protocol}://${req.get('host')}/auth/verify-email`;
-      sendVerificationEmailWithJwt(user._id, user.email, url);
-
       return res.status(403).json({ email: email });
     }
 
@@ -59,8 +55,7 @@ export const signUp = async (req: Request, res: Response) => {
   const authService = req.scope.resolve<IAuthService>('authService');
 
   try {
-    let url = `${req.protocol}://${req.get('host')}/auth/verify-email`;
-    await authService.SignUp(email, password, url);
+    await authService.SignUp(email, password);
 
     res.status(201).send('Successfully signed up');
   } catch (e) {
@@ -86,8 +81,7 @@ export const resendEmailVerification = async (req: Request, res: Response) => {
   const authService = req.scope.resolve<IAuthService>('authService');
 
   try {
-    let url = `${req.protocol}://${req.get('host')}/auth/verify-email`;
-    await authService.GetUserForEmailVerification(email, url);
+    await authService.ResendVerificationEmail(email);
 
     res.status(200).send('Successfully resent verification email');
   } catch (e) {

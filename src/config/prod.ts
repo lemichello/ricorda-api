@@ -3,6 +3,7 @@ import IConfig from './config';
 const prodConfig: IConfig = {
   dbUrl: process.env.MONGODB_URL!,
   webApplicationUrl: process.env.WEB_APP_URL!,
+  apiRootUrl: process.env.API_ROOT_URL!,
   emailSenderAccount: {
     service: 'Gmail',
     host: undefined,

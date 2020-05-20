@@ -1,6 +1,7 @@
 export default interface IConfig {
   dbUrl: string;
   webApplicationUrl: string;
+  apiRootUrl: string;
   emailSenderAccount: {
     service: string | undefined;
     host: string | undefined;
