@@ -14,19 +14,20 @@ import events from '../subscribers/events';
 import PubSub from 'pubsub-js';
 
 export default class AuthService implements IAuthService {
-  private googleOauthClient: OAuth2Client;
   private userModel: Models.UserModel;
 
   constructor({ userModel }: { userModel: Models.UserModel }) {
-    this.googleOauthClient = new OAuth2Client(config.googleClientId);
     this.userModel = userModel;
   }
 
   public async LogInWithGoogle(userToken: string): Promise<IUser> {
     let payload: TokenPayload | undefined;
+    let googleOauthClient: OAuth2Client = new OAuth2Client(
+      config.googleClientId
+    );
 
     try {
-      const ticket = await this.googleOauthClient.verifyIdToken({
+      const ticket = await googleOauthClient.verifyIdToken({
         idToken: userToken,
         audience: config.googleClientId,
       });
