@@ -7,7 +7,9 @@
     "dev": "tsc && cross-env NODE_ENV=dev node ./build/app.js",
     "dev-watch": "nodemon --exec npm run dev",
     "start": "tsc && cross-env NODE_ENV=prod node ./build/app.js",
-    "debug": "tsc && cross-env NODE_ENV=dev node --inspect ./build/app.js"
+    "debug": "tsc && cross-env NODE_ENV=dev node --inspect ./build/app.js",
+    "test": "tsc && mocha \"./build/**/__tests__/*.test.js\"",
+    "test:helpers": "tsc && mocha \"./build/helpers/__tests__/*.test.js\""
   },
   "engines": {
     "node": "14.x"
@@ -48,6 +50,14 @@
     "typescript": "^3.9.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "@types/chai": "^4.2.11",
+    "@types/faker": "^4.1.12",
+    "@types/mocha": "^7.0.2",
+    "@types/sinon": "^9.0.3",
+    "chai": "^4.2.0",
+    "faker": "^4.1.0",
+    "mocha": "^7.1.2",
+    "nodemon": "^2.0.4",
+    "sinon": "^9.0.2"
   }
 }

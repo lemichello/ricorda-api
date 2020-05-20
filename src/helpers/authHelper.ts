@@ -2,8 +2,8 @@ import config from '../config/index';
 import { sign } from 'jsonwebtoken';
 import { Response } from 'express';
 import moment from 'moment';
-import { sendVerificationEmail } from './emailHelper';
 import { IUser } from '../interfaces/IUser';
+import EmailHelper from './emailHelper';
 
 export const createAccessToken: (user: IUser) => string = function (
   user: IUser
@@ -59,7 +59,7 @@ export const sendVerificationEmailWithJwt = (
       expiresIn: '30m',
     },
     (_, emailToken) => {
-      sendVerificationEmail(email, `${url}/${emailToken}`);
+      EmailHelper.sendVerificationEmail(email, `${url}/${emailToken}`);
     }
   );
 };
