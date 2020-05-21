@@ -38,7 +38,7 @@ function getUserMock(): IUser {
   };
 }
 
-describe('Auth Service', () => {
+describe('AuthHelper', () => {
   describe('createAccessToken', () => {
     let userMock: IUser;
 
