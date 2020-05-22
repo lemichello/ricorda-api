@@ -1,5 +1,4 @@
 import chai from 'chai';
-import jwt_decode from 'jwt-decode';
 import { Response } from 'express';
 import {
   spy,
@@ -16,16 +15,6 @@ import jsonwebtoken from 'jsonwebtoken';
 import config from '../../config';
 import EmailHelper from '../emailHelper';
 import AuthHelper from '../authHelper';
-
-interface IRefreshToken {
-  id: string;
-  isSessionToken: boolean;
-  tokenVersion: number;
-}
-
-interface IAccessToken {
-  id: string;
-}
 
 let expect = chai.expect;
 
