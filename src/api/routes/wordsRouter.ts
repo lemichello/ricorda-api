@@ -1,18 +1,15 @@
 import { Router } from 'express';
-import {
-  createPair,
-  getWordsForRepeating,
-  updateWordsPair,
-  getWordsCount,
-  existsWordPair,
-  getSavedWords,
-} from '../controllers/wordsController';
 import { celebrate, Joi } from 'celebrate';
+import container from '../../loaders/dependencyInjector';
+import { IWordsController } from '../controllers/interfaces/IWordsController';
 
 const router = Router();
+const controller = container.resolve<IWordsController>('wordsController');
 
-router.get('/', getWordsForRepeating);
-router.get('/count', getWordsCount);
+router.get('/', controller.getWordsForRepeating.bind(controller));
+
+router.get('/count', controller.getWordsCount.bind(controller));
+
 router.post(
   '/saved/:page',
   celebrate({
@@ -23,8 +20,9 @@ router.post(
       page: Joi.number().required(),
     }),
   }),
-  getSavedWords
+  controller.getSavedWords.bind(controller)
 );
+
 router.post(
   '/',
   celebrate({
@@ -36,8 +34,9 @@ router.post(
       maxRepetitions: Joi.number().required(),
     }),
   }),
-  createPair
+  controller.createPair.bind(controller)
 );
+
 router.put(
   '/:id',
   celebrate({
@@ -52,8 +51,9 @@ router.put(
       id: Joi.string().required(),
     }),
   }),
-  updateWordsPair
+  controller.updateWordsPair.bind(controller)
 );
+
 router.post(
   '/exists',
   celebrate({
@@ -61,7 +61,7 @@ router.post(
       sourceWord: Joi.string().not().empty().required(),
     }),
   }),
-  existsWordPair
+  controller.existsWordPair.bind(controller)
 );
 
 export default router;
