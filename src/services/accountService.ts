@@ -1,10 +1,16 @@
-import logger from '../helpers/loggingHelper';
 import { IUserModel } from '../models/userModel';
 import { IAccountService } from './interfaces/IAccountService';
 import PubSub from 'pubsub-js';
 import events from '../subscribers/events';
+import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 
 export default class AccountService implements IAccountService {
+  private loggingHelper: ILoggingHelper;
+
+  constructor(loggingHelper: ILoggingHelper) {
+    this.loggingHelper = loggingHelper;
+  }
+
   public async UpdatePassword(
     user: IUserModel,
     oldPassword: string,
@@ -24,9 +30,9 @@ export default class AccountService implements IAccountService {
 
       await user.save();
 
-      logger.info(`Changed password for user: ${user._id}`);
+      this.loggingHelper.info(`Changed password for user: ${user._id}`);
     } catch (e) {
-      logger.error(`Can't update password for user: ${e}`, {
+      this.loggingHelper.error(`Can't update password for user: ${e}`, {
         userId: user._id,
         oldPassword: oldPassword,
         newPassword: newPassword,
@@ -48,7 +54,7 @@ export default class AccountService implements IAccountService {
 
       PubSub.publish(events.user.UPDATED_EMAIL, { user });
 
-      logger.info(`Changed email for user: ${user._id}`);
+      this.loggingHelper.info(`Changed email for user: ${user._id}`);
     } catch (e) {
       if (e.errmsg.includes('duplicate')) {
         throw {
@@ -57,7 +63,7 @@ export default class AccountService implements IAccountService {
         };
       }
 
-      logger.error(`Can't update email for user: ${e}`, {
+      this.loggingHelper.error(`Can't update email for user: ${e}`, {
         userId: user._id,
         newEmail: newEmail,
       });
@@ -75,7 +81,7 @@ export default class AccountService implements IAccountService {
 
       await user.save();
 
-      logger.info(`Revoked access token for user: ${user.id}`);
+      this.loggingHelper.info(`Revoked access token for user: ${user.id}`);
     } catch (e) {
       throw {
         status: 500,

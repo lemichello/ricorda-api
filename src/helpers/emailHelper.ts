@@ -1,7 +1,8 @@
 import transporter from '../transporter';
+import { IEmailHelper } from './interfaces/IEmailHelper';
 
-export default class EmailHelper {
-  static sendVerificationEmail(email: string, url: string) {
+export default class EmailHelper implements IEmailHelper {
+  sendVerificationEmail(email: string, url: string) {
     transporter.sendMail({
       to: email,
       subject: 'Email confirmation',

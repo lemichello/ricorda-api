@@ -1,12 +1,10 @@
 import { Router } from 'express';
-import {
-  updatePassword,
-  updateEmail,
-  revokeRefreshToken,
-} from '../controllers/accountController';
 import { celebrate, Joi } from 'celebrate';
+import container from '../../loaders/dependencyInjector';
+import { IAccountController } from '../controllers/interfaces/IAccountController';
 
 const router = Router();
+const controller = container.resolve<IAccountController>('accountController');
 
 router.put(
   '/update-password',
@@ -16,8 +14,9 @@ router.put(
       newPassword: Joi.string().not().empty().required(),
     }),
   }),
-  updatePassword
+  controller.updatePassword.bind(controller)
 );
+
 router.put(
   '/update-email',
   celebrate({
@@ -25,8 +24,12 @@ router.put(
       newEmail: Joi.string().not().empty().required(),
     }),
   }),
-  updateEmail
+  controller.updateEmail.bind(controller)
 );
-router.post('/revoke_refresh_token', revokeRefreshToken);
+
+router.post(
+  '/revoke_refresh_token',
+  controller.revokeRefreshToken.bind(controller)
+);
 
 export default router;

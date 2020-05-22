@@ -11,11 +11,13 @@ describe('EmailHelper', () => {
     let transporterStub: SinonStub;
     let fakeEmail: string;
     let fakeUrl: string;
+    let emailHelperMock: EmailHelper;
 
     beforeEach(() => {
       transporterStub = stub(transporter, 'sendMail');
       fakeEmail = faker.internet.email();
       fakeUrl = faker.internet.url();
+      emailHelperMock = new EmailHelper();
     });
 
     afterEach(() => {
@@ -24,7 +26,7 @@ describe('EmailHelper', () => {
 
     it('should call transporter once', (done) => {
       // Act
-      EmailHelper.sendVerificationEmail(fakeEmail, fakeUrl);
+      emailHelperMock.sendVerificationEmail(fakeEmail, fakeUrl);
 
       // Assert
       expect(transporterStub.calledOnce).to.be.true;
@@ -37,7 +39,7 @@ describe('EmailHelper', () => {
       let receivedArgs: any[];
 
       // Act
-      EmailHelper.sendVerificationEmail(fakeEmail, fakeUrl);
+      emailHelperMock.sendVerificationEmail(fakeEmail, fakeUrl);
       receivedArgs = transporterStub.getCall(0).args;
 
       // Assert

@@ -1,81 +1,90 @@
 import { Request, Response } from 'express';
 import { IWordsService } from '../../services/interfaces/IWordsService';
+import { IWordsController } from './interfaces/IWordsController';
 
-export const createPair = async (req: Request, res: Response) => {
-  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+export default class WordsController implements IWordsController {
+  private wordsService: IWordsService;
 
-  try {
-    let newWordPair = await wordsService.CreateWordPair(req.user.id, req.body);
-
-    res.status(200).json({ data: newWordPair });
-  } catch (e) {
-    res.status(e.status).send(e.message);
+  constructor(wordsService: IWordsService) {
+    this.wordsService = wordsService;
   }
-};
 
-export const getWordsForRepeating = async (req: Request, res: Response) => {
-  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+  async createPair(req: Request, res: Response): Promise<void> {
+    try {
+      let newWordPair = await this.wordsService.CreateWordPair(
+        req.user.id,
+        req.body
+      );
 
-  try {
-    let words = await wordsService.GetWordsForRepeating(req.user.id);
-
-    res.status(200).json({ data: words });
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).json({ data: newWordPair });
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
 
-export const getSavedWords = async (req: Request, res: Response) => {
-  const page = Number.parseInt(req.params.page);
-  const { word } = req.body;
-  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+  async getWordsForRepeating(req: Request, res: Response): Promise<void> {
+    try {
+      let words = await this.wordsService.GetWordsForRepeating(req.user.id);
 
-  try {
-    let words = await wordsService.GetSavedWords(page, word, req.user.id);
-
-    res.status(200).json(words);
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).json({ data: words });
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
 
-export const updateWordsPair = async (req: Request, res: Response) => {
-  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+  async getSavedWords(req: Request, res: Response): Promise<void> {
+    const page = Number.parseInt(req.params.page);
+    const { word } = req.body;
 
-  try {
-    let updatedWordPair = await wordsService.UpdateWordPair(
-      req.body,
-      req.params.id,
-      req.user.id
-    );
+    try {
+      let words = await this.wordsService.GetSavedWords(
+        page,
+        word,
+        req.user.id
+      );
 
-    res.status(200).json({ data: updatedWordPair });
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).json(words);
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
 
-export const getWordsCount = async (req: Request, res: Response) => {
-  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+  async updateWordsPair(req: Request, res: Response): Promise<void> {
+    try {
+      let updatedWordPair = await this.wordsService.UpdateWordPair(
+        req.body,
+        req.params.id,
+        req.user.id
+      );
 
-  try {
-    let count = await wordsService.GetWordsCount(req.user.id);
-
-    res.status(200).json({ data: count });
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).json({ data: updatedWordPair });
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
 
-export const existsWordPair = async (req: Request, res: Response) => {
-  let { sourceWord } = req.body;
-  const wordsService = req.scope.resolve<IWordsService>('wordsService');
+  async getWordsCount(req: Request, res: Response): Promise<void> {
+    try {
+      let count = await this.wordsService.GetWordsCount(req.user.id);
 
-  try {
-    let exists = await wordsService.WordPairExists(sourceWord, req.user.id);
-
-    res.status(200).json({ data: exists });
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).json({ data: count });
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
+
+  async existsWordPair(req: Request, res: Response): Promise<void> {
+    let { sourceWord } = req.body;
+
+    try {
+      let exists = await this.wordsService.WordPairExists(
+        sourceWord,
+        req.user.id
+      );
+
+      res.status(200).json({ data: exists });
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
+  }
+}

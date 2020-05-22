@@ -1,18 +1,21 @@
-import {
-  createRefreshToken,
-  createAccessToken,
-  sendRefreshToken,
-  sendVerificationEmailWithJwt,
-} from '../authHelper';
 import chai from 'chai';
 import jwt_decode from 'jwt-decode';
 import { Response } from 'express';
-import { spy, stub, SinonStub, replace, SinonSpy } from 'sinon';
+import {
+  spy,
+  stub,
+  SinonStub,
+  replace,
+  SinonSpy,
+  createStubInstance,
+  SinonStubbedInstance,
+} from 'sinon';
 import faker from 'faker';
 import { IUser } from '../../interfaces/IUser';
 import jsonwebtoken from 'jsonwebtoken';
 import config from '../../config';
 import EmailHelper from '../emailHelper';
+import AuthHelper from '../authHelper';
 
 interface IRefreshToken {
   id: string;
@@ -41,14 +44,16 @@ function getUserMock(): IUser {
 describe('AuthHelper', () => {
   describe('createAccessToken', () => {
     let userMock: IUser;
+    let authHelperMock: AuthHelper;
 
     beforeEach(() => {
       userMock = getUserMock();
+      authHelperMock = new AuthHelper(createStubInstance(EmailHelper));
     });
 
     it('should have equal id', (done) => {
       // Act
-      let token = createAccessToken(userMock);
+      let token = authHelperMock.createAccessToken(userMock);
       let decodedToken: IAccessToken = jwt_decode(token);
 
       // Assert
@@ -60,14 +65,16 @@ describe('AuthHelper', () => {
 
   describe('createRefreshToken', () => {
     let userMock: IUser;
+    let authHelperMock: AuthHelper;
 
     beforeEach(() => {
       userMock = getUserMock();
+      authHelperMock = new AuthHelper(createStubInstance(EmailHelper));
     });
 
     it('should create refresh token with session expiration', (done) => {
       // Act
-      let token = createRefreshToken(userMock, true);
+      let token = authHelperMock.createRefreshToken(userMock, true);
       let decodedToken: IRefreshToken = jwt_decode(token);
 
       // Assert
@@ -78,7 +85,7 @@ describe('AuthHelper', () => {
 
     it('should have equal fields', (done) => {
       // Act
-      let token = createRefreshToken(userMock, true);
+      let token = authHelperMock.createRefreshToken(userMock, true);
       let decodedToken: IRefreshToken = jwt_decode(token);
 
       // Assert
@@ -93,6 +100,7 @@ describe('AuthHelper', () => {
   describe('sendRefreshToken', () => {
     let fakeResponse: Response;
     let cookieSpy: SinonSpy;
+    let authHelperMock: AuthHelper;
 
     beforeEach(() => {
       fakeResponse = {} as Response;
@@ -100,6 +108,7 @@ describe('AuthHelper', () => {
         return {} as Response;
       };
       cookieSpy = spy(fakeResponse, 'cookie');
+      authHelperMock = new AuthHelper(createStubInstance(EmailHelper));
     });
 
     afterEach(() => {
@@ -108,7 +117,7 @@ describe('AuthHelper', () => {
 
     it('should call "cookie" method once', (done) => {
       // Act
-      sendRefreshToken(fakeResponse, '', true);
+      authHelperMock.sendRefreshToken(fakeResponse, '', true);
 
       // Assert
       expect(cookieSpy.calledOnce).to.be.true;
@@ -123,7 +132,7 @@ describe('AuthHelper', () => {
       let receivedArgs: any[];
 
       // Act
-      sendRefreshToken(fakeResponse, expectedTokenValue, true);
+      authHelperMock.sendRefreshToken(fakeResponse, expectedTokenValue, true);
 
       // Assert
       receivedArgs = cookieSpy.getCall(0).args;
@@ -139,7 +148,7 @@ describe('AuthHelper', () => {
       let receivedArgs: any[];
 
       // Act
-      sendRefreshToken(fakeResponse, 'dummyToken', true);
+      authHelperMock.sendRefreshToken(fakeResponse, 'dummyToken', true);
 
       // Assert
       receivedArgs = cookieSpy.getCall(0).args;
@@ -154,7 +163,7 @@ describe('AuthHelper', () => {
       let receivedArgs: any[];
 
       // Act
-      sendRefreshToken(fakeResponse, 'dummyToken', false);
+      authHelperMock.sendRefreshToken(fakeResponse, 'dummyToken', false);
 
       // Assert
       receivedArgs = cookieSpy.getCall(0).args;
@@ -168,10 +177,12 @@ describe('AuthHelper', () => {
   describe('sendVerificationEmailWithJwt', () => {
     let userMock: IUser;
     let signStub: SinonStub;
+    let authHelperMock: AuthHelper;
 
     beforeEach(() => {
       userMock = getUserMock();
       signStub = stub(jsonwebtoken, 'sign');
+      authHelperMock = new AuthHelper(createStubInstance(EmailHelper));
     });
 
     afterEach(() => {
@@ -181,7 +192,11 @@ describe('AuthHelper', () => {
     describe("'Sign' calls", () => {
       it("should call 'sign' method once", (done) => {
         // Act
-        sendVerificationEmailWithJwt(userMock._id, userMock.email, 'dummyUrl');
+        authHelperMock.sendVerificationEmailWithJwt(
+          userMock._id,
+          userMock.email,
+          faker.internet.url()
+        );
 
         // Assert
         expect(signStub.calledOnce).to.be.true;
@@ -196,7 +211,11 @@ describe('AuthHelper', () => {
         replace(config.secrets, 'emailSecret', fakeEmailSecret);
 
         // Act
-        sendVerificationEmailWithJwt(userMock._id, userMock.email, 'dummyUrl');
+        authHelperMock.sendVerificationEmailWithJwt(
+          userMock._id,
+          userMock.email,
+          faker.internet.url()
+        );
 
         // Assert
         receivedArgs = signStub.getCall(0).args;
@@ -213,14 +232,16 @@ describe('AuthHelper', () => {
     });
 
     describe("'sendVerificationEmail' calls", () => {
-      let sendEmailStub: SinonStub;
+      let authHelperMock: AuthHelper;
+      let emailHelperMock: SinonStubbedInstance<EmailHelper>;
 
       beforeEach(() => {
-        sendEmailStub = stub(EmailHelper, 'sendVerificationEmail');
+        emailHelperMock = createStubInstance(EmailHelper);
+        authHelperMock = new AuthHelper(emailHelperMock);
       });
 
       afterEach(() => {
-        sendEmailStub.restore();
+        emailHelperMock.sendVerificationEmail.restore();
       });
 
       it("should call 'sendVerificationEmail' method once", (done) => {
@@ -228,10 +249,14 @@ describe('AuthHelper', () => {
         signStub.yields('', 'dummyToken');
 
         // Act
-        sendVerificationEmailWithJwt(userMock._id, userMock.email, 'dummyUrl');
+        authHelperMock.sendVerificationEmailWithJwt(
+          userMock._id,
+          userMock.email,
+          'dummyUrl'
+        );
 
         //Assert
-        expect(sendEmailStub.calledOnce).to.be.true;
+        expect(emailHelperMock.sendVerificationEmail.calledOnce).to.be.true;
 
         done();
       });
@@ -245,8 +270,12 @@ describe('AuthHelper', () => {
         signStub.yields('', fakeToken);
 
         // Act
-        sendVerificationEmailWithJwt(userMock._id, userMock.email, fakeUrl);
-        receivedArgs = sendEmailStub.getCall(0).args;
+        authHelperMock.sendVerificationEmailWithJwt(
+          userMock._id,
+          userMock.email,
+          fakeUrl
+        );
+        receivedArgs = emailHelperMock.sendVerificationEmail.getCall(0).args;
 
         // Assert
         expect(receivedArgs[0]).to.be.equal(userMock.email);

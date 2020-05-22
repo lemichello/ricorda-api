@@ -1,43 +1,54 @@
 import { Request, Response } from 'express';
-import { sendRefreshToken } from '../../helpers/authHelper';
 import { IAccountService } from '../../services/interfaces/IAccountService';
+import { IAccountController } from './interfaces/IAccountController';
+import { IAuthHelper } from '../../helpers/interfaces/IAuthHelper';
 
-export const updatePassword = async (req: Request, res: Response) => {
-  let { oldPassword, newPassword } = req.body;
-  const accountService = req.scope.resolve<IAccountService>('accountService');
+export default class AccountController implements IAccountController {
+  private accountService: IAccountService;
+  private authHelper: IAuthHelper;
 
-  try {
-    await accountService.UpdatePassword(req.user, oldPassword, newPassword);
-
-    res.status(200).send('Successfully updated password');
-  } catch (e) {
-    res.status(e.status).send(e.message);
+  constructor(accountService: IAccountService, authHelper: IAuthHelper) {
+    this.accountService = accountService;
+    this.authHelper = authHelper;
   }
-};
 
-export const updateEmail = async (req: Request, res: Response) => {
-  let { newEmail } = req.body;
-  const accountService = req.scope.resolve<IAccountService>('accountService');
+  public async updatePassword(req: Request, res: Response): Promise<void> {
+    let { oldPassword, newPassword } = req.body;
 
-  try {
-    await accountService.UpdateEmail(req.user, newEmail);
+    try {
+      await this.accountService.UpdatePassword(
+        req.user,
+        oldPassword,
+        newPassword
+      );
 
-    res.status(200).send('Successfully updated email');
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).send('Successfully updated password');
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
 
-export const revokeRefreshToken = async function (req: Request, res: Response) {
-  const accountService = req.scope.resolve<IAccountService>('accountService');
+  public async updateEmail(req: Request, res: Response): Promise<void> {
+    let { newEmail } = req.body;
 
-  try {
-    await accountService.RevokeToken(req.user);
+    try {
+      await this.accountService.UpdateEmail(req.user, newEmail);
 
-    sendRefreshToken(res, '', true);
-
-    res.status(200).send('Successfully revoked refresh token');
-  } catch (e) {
-    res.status(e.status).send(e.message);
+      res.status(200).send('Successfully updated email');
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
   }
-};
+
+  public async revokeRefreshToken(req: Request, res: Response): Promise<void> {
+    try {
+      await this.accountService.RevokeToken(req.user);
+
+      this.authHelper.sendRefreshToken(res, '', true);
+
+      res.status(200).send('Successfully revoked refresh token');
+    } catch (e) {
+      res.status(e.status).send(e.message);
+    }
+  }
+}
