@@ -42,22 +42,55 @@ function getUserMock(): IUser {
 }
 
 describe('AuthHelper', () => {
+  let fakeEmailSecret = faker.random.uuid();
+  let fakeAccessTokenSecret = faker.random.uuid();
+  let fakeRefreshTokenSecret = faker.random.uuid();
+
+  replace(config.secrets, 'emailSecret', fakeEmailSecret);
+  replace(config.secrets, 'accessTokenSecret', fakeAccessTokenSecret);
+  replace(config.secrets, 'refreshTokenSecret', fakeRefreshTokenSecret);
+
   describe('createAccessToken', () => {
     let userMock: IUser;
     let authHelperMock: AuthHelper;
+    let signStub: SinonStub;
 
     beforeEach(() => {
       userMock = getUserMock();
       authHelperMock = new AuthHelper(createStubInstance(EmailHelper));
+      signStub = stub(jsonwebtoken, 'sign');
     });
 
-    it('should have equal id', (done) => {
+    afterEach(() => {
+      signStub.restore();
+    });
+
+    it("should call 'sign' method once", (done) => {
       // Act
-      let token = authHelperMock.createAccessToken(userMock);
-      let decodedToken: IAccessToken = jwt_decode(token);
+      authHelperMock.createAccessToken(userMock);
 
       // Assert
-      expect(decodedToken.id).to.be.equal(userMock._id);
+      expect(signStub.calledOnce).to.be.true;
+
+      done();
+    });
+
+    it("should call 'sign' method with correct parameters", (done) => {
+      // Arrange
+      let receivedArgs: any[];
+
+      // Act
+      authHelperMock.createAccessToken(userMock);
+      receivedArgs = signStub.getCall(0).args;
+
+      // Assert
+      expect(receivedArgs[0]).to.be.deep.equal({
+        id: userMock._id,
+      });
+      expect(receivedArgs[1]).to.be.equal(fakeAccessTokenSecret);
+      expect(receivedArgs[2]).to.be.deep.equal({
+        expiresIn: '15m',
+      });
 
       done();
     });
@@ -66,32 +99,47 @@ describe('AuthHelper', () => {
   describe('createRefreshToken', () => {
     let userMock: IUser;
     let authHelperMock: AuthHelper;
+    let signStub: SinonStub;
 
     beforeEach(() => {
       userMock = getUserMock();
       authHelperMock = new AuthHelper(createStubInstance(EmailHelper));
+      signStub = stub(jsonwebtoken, 'sign');
     });
 
-    it('should create refresh token with session expiration', (done) => {
+    afterEach(() => {
+      signStub.restore();
+    });
+
+    it("should call 'sign' method once", (done) => {
       // Act
-      let token = authHelperMock.createRefreshToken(userMock, true);
-      let decodedToken: IRefreshToken = jwt_decode(token);
+      authHelperMock.createRefreshToken(userMock, true);
 
       // Assert
-      expect(decodedToken.isSessionToken).to.be.true;
+      expect(signStub.calledOnce).to.be.true;
 
       done();
     });
 
-    it('should have equal fields', (done) => {
+    it("should call 'sign' method with correct parameters", (done) => {
+      // Arrange
+      let expectedFirstParameter = {
+        id: userMock._id,
+        tokenVersion: userMock.tokenVersion,
+        isSessionToken: true,
+      };
+      let receivedArgs: any[];
+
       // Act
-      let token = authHelperMock.createRefreshToken(userMock, true);
-      let decodedToken: IRefreshToken = jwt_decode(token);
+      authHelperMock.createRefreshToken(userMock, true);
+      receivedArgs = signStub.getCall(0).args;
 
       // Assert
-      expect(decodedToken.id).to.be.equal(userMock._id);
-      expect(decodedToken.tokenVersion).to.be.equal(userMock.tokenVersion);
-      expect(decodedToken.isSessionToken).to.be.true;
+      expect(receivedArgs[0]).to.be.deep.equal(expectedFirstParameter);
+      expect(receivedArgs[1]).to.be.equal(fakeRefreshTokenSecret);
+      expect(receivedArgs[2]).to.be.deep.equal({
+        expiresIn: '7d',
+      });
 
       done();
     });
@@ -207,8 +255,6 @@ describe('AuthHelper', () => {
       it("should call 'sign' method with correct arguments", (done) => {
         // Arrange
         let receivedArgs: any[];
-        let fakeEmailSecret = faker.random.uuid();
-        replace(config.secrets, 'emailSecret', fakeEmailSecret);
 
         // Act
         authHelperMock.sendVerificationEmailWithJwt(
