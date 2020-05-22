@@ -20,6 +20,7 @@ const prodConfig: IConfig = {
   googleClientId:
     '1095009919728-drr0i1k90d7oodtffc8prrt7n6528n42.apps.googleusercontent.com',
   secureCookies: true,
+  corsWhitelist: [process.env.WEB_APP_URL!],
 };
 
 export default prodConfig;

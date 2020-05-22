@@ -17,4 +17,5 @@ export default interface IConfig {
   logDnaKey: string;
   googleClientId: string;
   secureCookies: boolean;
+  corsWhitelist: string[];
 }
