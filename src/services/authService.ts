@@ -1,23 +1,33 @@
 import { IUser } from '../interfaces/IUser';
-import logger from '../helpers/loggingHelper';
 import { TokenPayload, OAuth2Client } from 'google-auth-library';
 import config from '../config';
 import { verify } from 'jsonwebtoken';
 import jwtDecode from 'jwt-decode';
-import {
-  createAccessToken,
-  createRefreshToken,
-  sendVerificationEmailWithJwt,
-} from '../helpers/authHelper';
 import { IRefreshTokenResponse, IAuthService } from './interfaces/IAuthService';
 import events from '../subscribers/events';
 import PubSub from 'pubsub-js';
+import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
+import { IAuthHelper } from '../helpers/interfaces/IAuthHelper';
+
+interface ICtorProps {
+  userModel: Models.UserModel;
+  loggingHelper: ILoggingHelper;
+  authHelper: IAuthHelper;
+}
 
 export default class AuthService implements IAuthService {
   private userModel: Models.UserModel;
+  private loggingHelper: ILoggingHelper;
+  private authHelper: IAuthHelper;
 
-  constructor({ userModel }: { userModel: Models.UserModel }) {
+  constructor(
+    userModel: Models.UserModel,
+    loggingHelper: ILoggingHelper,
+    authHelper: IAuthHelper
+  ) {
     this.userModel = userModel;
+    this.loggingHelper = loggingHelper;
+    this.authHelper = authHelper;
   }
 
   public async LogInWithGoogle(userToken: string): Promise<IUser> {
@@ -99,7 +109,7 @@ export default class AuthService implements IAuthService {
 
       PubSub.publish(events.user.LOGGED_IN, { user });
 
-      logger.info(`Logged in user with email: ${email}`);
+      this.loggingHelper.info(`Logged in user with email: ${email}`);
 
       return user;
     } catch (e) {
@@ -107,7 +117,7 @@ export default class AuthService implements IAuthService {
         throw e;
       }
 
-      logger.error(`Can't log in user with error: ${e}`, {
+      this.loggingHelper.error(`Can't log in user with error: ${e}`, {
         email,
         password,
       });
@@ -127,7 +137,7 @@ export default class AuthService implements IAuthService {
 
       PubSub.publish(events.user.SIGNED_UP, { user });
 
-      logger.info(`Signed up user with email: ${email}`);
+      this.loggingHelper.info(`Signed up user with email: ${email}`);
 
       return user;
     } catch (e) {
@@ -138,7 +148,7 @@ export default class AuthService implements IAuthService {
         };
       }
 
-      logger.error(`Can't sign up user with error: ${e}`, {
+      this.loggingHelper.error(`Can't sign up user with error: ${e}`, {
         email,
         password,
       });
@@ -164,7 +174,9 @@ export default class AuthService implements IAuthService {
       try {
         const payload: any = jwtDecode(token);
 
-        logger.info(`Failed to verify email for user: ${payload.id}`);
+        this.loggingHelper.info(
+          `Failed to verify email for user: ${payload.id}`
+        );
 
         return `${config.webApplicationUrl}/signup/verify/?email=${payload.email}&failed=true`;
       } catch (e) {
@@ -194,9 +206,11 @@ export default class AuthService implements IAuthService {
 
       const url = `${config.apiRootUrl}/auth/verify-email`;
 
-      sendVerificationEmailWithJwt(user._id, user.email, url);
+      this.authHelper.sendVerificationEmailWithJwt(user._id, user.email, url);
 
-      logger.info(`Resent verification email to user with email: ${email}`);
+      this.loggingHelper.info(
+        `Resent verification email to user with email: ${email}`
+      );
 
       return user;
     } catch (e) {
@@ -220,7 +234,7 @@ export default class AuthService implements IAuthService {
     };
 
     if (!token) {
-      logger.debug('Received empty token for refresh', {
+      this.loggingHelper.debug('Received empty token for refresh', {
         token: token,
       });
       return response;
@@ -231,7 +245,7 @@ export default class AuthService implements IAuthService {
     try {
       payload = verify(token, config.secrets.refreshTokenSecret);
     } catch (e) {
-      logger.debug('Received incorrect token for refresh', {
+      this.loggingHelper.debug('Received incorrect token for refresh', {
         token: token,
       });
       return response;
@@ -240,14 +254,17 @@ export default class AuthService implements IAuthService {
     const user = await this.userModel.findById(payload.id).exec();
 
     if (!user) {
-      logger.debug('Received token with incorrect user id for refresh', {
-        token: token,
-      });
+      this.loggingHelper.debug(
+        'Received token with incorrect user id for refresh',
+        {
+          token: token,
+        }
+      );
       return response;
     }
 
     if (user.tokenVersion !== payload.tokenVersion) {
-      logger.debug('Received outdated token for refresh', {
+      this.loggingHelper.debug('Received outdated token for refresh', {
         token: token,
         usersTokenVersion: user.tokenVersion,
         tokenVersion: payload.tokenVersion,
@@ -256,10 +273,13 @@ export default class AuthService implements IAuthService {
       return response;
     }
 
-    let accessToken = createAccessToken(user);
-    let refreshToken = createRefreshToken(user, payload.isSessionToken);
+    let accessToken = this.authHelper.createAccessToken(user);
+    let refreshToken = this.authHelper.createRefreshToken(
+      user,
+      payload.isSessionToken
+    );
 
-    logger.info(`Refreshed access token for user: ${user.id}`);
+    this.loggingHelper.info(`Refreshed access token for user: ${user.id}`);
 
     return {
       ok: true,
@@ -281,7 +301,7 @@ export default class AuthService implements IAuthService {
       };
       let registeredUser = await this.userModel.create(newUser);
 
-      logger.info(`Registered user with Google: ${email}`);
+      this.loggingHelper.info(`Registered user with Google: ${email}`);
 
       return registeredUser;
     } catch (e) {
@@ -292,7 +312,7 @@ export default class AuthService implements IAuthService {
         };
       }
 
-      logger.error(`Can't register user with Google: ${e}`, {
+      this.loggingHelper.error(`Can't register user with Google: ${e}`, {
         userEmail: email,
       });
       throw {

@@ -1,5 +1,4 @@
 import express from 'express';
-import logger from './helpers/loggingHelper';
 
 async function startServer() {
   var app = express();
@@ -10,7 +9,7 @@ async function startServer() {
 
   app.listen(port, (err) => {
     if (err) {
-      logger.error(`Can't start server : `, err);
+      console.error(`Can't start server : `, err);
     }
 
     console.info(`Server is listening on port : ${port}`);

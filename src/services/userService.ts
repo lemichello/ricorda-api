@@ -1,11 +1,10 @@
-import { IUser } from '../interfaces/IUser';
 import { IUserService } from './interfaces/IUserService';
 import { IUserModel } from '../models/userModel';
 
 export default class UserService implements IUserService {
   private userModel: Models.UserModel;
 
-  constructor({ userModel }: { userModel: Models.UserModel }) {
+  constructor(userModel: Models.UserModel) {
     this.userModel = userModel;
   }
 

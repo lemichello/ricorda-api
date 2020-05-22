@@ -1,16 +1,10 @@
 import { Router } from 'express';
-import {
-  logIn,
-  signUp,
-  verifyEmail,
-  resendEmailVerification,
-  refreshToken,
-  logOut,
-  logInWithGoogle,
-} from '../controllers/authController';
 import { celebrate, Joi } from 'celebrate';
+import container from '../../loaders/dependencyInjector';
+import { IAuthController } from '../controllers/interfaces/IAuthController';
 
 const router = Router();
+const controller = container.resolve<IAuthController>('authController');
 
 router.post(
   '/login',
@@ -21,10 +15,12 @@ router.post(
       rememberMe: Joi.boolean().required(),
     }),
   }),
-  logIn
+  controller.logIn.bind(controller)
 );
-router.post('/login-with-google', logInWithGoogle);
-router.post('/logout', logOut);
+router.post('/login-with-google', controller.logInWithGoogle.bind(controller));
+
+router.post('/logout', controller.logOut.bind(controller));
+
 router.post(
   '/signup',
   celebrate({
@@ -33,8 +29,9 @@ router.post(
       password: Joi.string().not().empty().required(),
     }),
   }),
-  signUp
+  controller.signUp.bind(controller)
 );
+
 router.get(
   '/verify-email/:token',
   celebrate({
@@ -42,8 +39,9 @@ router.get(
       token: Joi.string().not().empty().required(),
     }),
   }),
-  verifyEmail
+  controller.verifyEmail.bind(controller)
 );
+
 router.post(
   '/resend-email-verification',
   celebrate({
@@ -51,8 +49,9 @@ router.post(
       email: Joi.string().not().empty().required(),
     }),
   }),
-  resendEmailVerification
+  controller.resendEmailVerification.bind(controller)
 );
-router.post('/refresh_token', refreshToken);
+
+router.post('/refresh_token', controller.refreshToken.bind(controller));
 
 export default router;

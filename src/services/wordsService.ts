@@ -1,16 +1,21 @@
 import moment from 'moment';
 import IWordPair from '../interfaces/IWordPair';
-import logger from '../helpers/loggingHelper';
 import { Types } from 'mongoose';
 import { shuffle } from 'lodash';
 import { ISavedWordsResponse, IWordsService } from './interfaces/IWordsService';
+import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 
 export default class WordsService implements IWordsService {
   private pageSize = 15;
   private wordPairModel: Models.WordPairModel;
+  private loggingHelper: ILoggingHelper;
 
-  constructor({ wordPairModel }: { wordPairModel: Models.WordPairModel }) {
+  constructor(
+    wordPairModel: Models.WordPairModel,
+    loggingHelper: ILoggingHelper
+  ) {
     this.wordPairModel = wordPairModel;
+    this.loggingHelper = loggingHelper;
   }
 
   public async CreateWordPair(
@@ -29,11 +34,11 @@ export default class WordsService implements IWordsService {
         userId: userId,
       });
 
-      logger.info(`Created new word pair for user: ${userId}`);
+      this.loggingHelper.info(`Created new word pair for user: ${userId}`);
 
       return newWordPair;
     } catch (e) {
-      logger.error(`Can't create new word pair: ${e}`, {
+      this.loggingHelper.error(`Can't create new word pair: ${e}`, {
         userId: userId,
         requestData: wordPair,
       });
@@ -74,10 +79,10 @@ export default class WordsService implements IWordsService {
 
       words = shuffle(words);
 
-      logger.info(`Sent words for repeating to user: ${userId}`);
+      this.loggingHelper.info(`Sent words for repeating to user: ${userId}`);
       return words;
     } catch (e) {
-      logger.error(`Can't get words for repeating: ${e}`, {
+      this.loggingHelper.error(`Can't get words for repeating: ${e}`, {
         userId: userId,
       });
       throw {
@@ -117,7 +122,7 @@ export default class WordsService implements IWordsService {
 
       const next = count > this.pageSize * page;
 
-      logger.info(`Sent saved words for user: ${userId}`);
+      this.loggingHelper.info(`Sent saved words for user: ${userId}`);
 
       return {
         data: words,
@@ -125,7 +130,7 @@ export default class WordsService implements IWordsService {
         next,
       };
     } catch (e) {
-      logger.error(`Can't send saved words: ${e}`, {
+      this.loggingHelper.error(`Can't send saved words: ${e}`, {
         userId: userId,
         requestData: { page, word },
       });
@@ -155,7 +160,7 @@ export default class WordsService implements IWordsService {
         .lean()
         .exec();
     } catch (e) {
-      logger.error(`Can't update word pair: ${e}`, {
+      this.loggingHelper.error(`Can't update word pair: ${e}`, {
         userId: userId,
         requestData: { wordPair, wordPairId, userId },
       });
@@ -172,7 +177,7 @@ export default class WordsService implements IWordsService {
       };
     }
 
-    logger.info(`Updated word pair for user: ${userId}`);
+    this.loggingHelper.info(`Updated word pair for user: ${userId}`);
 
     return updatedDoc;
   }
@@ -195,10 +200,10 @@ export default class WordsService implements IWordsService {
         .count('documentsCount')
         .exec();
 
-      logger.info(`Sent words count for user: ${userId}`);
+      this.loggingHelper.info(`Sent words count for user: ${userId}`);
       return result[0]?.documentsCount || 0;
     } catch (e) {
-      logger.error(`Can't send words count: ${e}`, {
+      this.loggingHelper.error(`Can't send words count: ${e}`, {
         userId: userId,
       });
       throw {
@@ -218,10 +223,12 @@ export default class WordsService implements IWordsService {
         sourceWord: sourceWord,
       });
 
-      logger.info(`Sent word pair existence result to user: ${userId}`);
+      this.loggingHelper.info(
+        `Sent word pair existence result to user: ${userId}`
+      );
       return exists;
     } catch (e) {
-      logger.error(`Can't send word pair existence result: ${e}`, {
+      this.loggingHelper.error(`Can't send word pair existence result: ${e}`, {
         userId: userId,
         requestData: { sourceWord },
       });
