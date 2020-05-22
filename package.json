@@ -6,7 +6,7 @@
     "tsc": "tsc",
     "dev": "tsc && cross-env NODE_ENV=dev node ./build/app.js",
     "dev-watch": "nodemon --exec npm run dev",
-    "start": "tsc && cross-env NODE_ENV=prod node ./build/app.js",
+    "start": "tsc --build tsconfig.prod.json  && cross-env NODE_ENV=prod node ./build/app.js",
     "debug": "tsc && cross-env NODE_ENV=dev node --inspect ./build/app.js",
     "test": "tsc && mocha \"./build/**/__tests__/*.test.js\"",
     "test:helpers": "tsc && mocha \"./build/helpers/__tests__/*.test.js\""
