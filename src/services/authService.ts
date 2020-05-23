@@ -8,12 +8,8 @@ import events from '../subscribers/events';
 import PubSub from 'pubsub-js';
 import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 import { IAuthHelper } from '../helpers/interfaces/IAuthHelper';
-
-interface ICtorProps {
-  userModel: Models.UserModel;
-  loggingHelper: ILoggingHelper;
-  authHelper: IAuthHelper;
-}
+import { IServiceResponse } from '../interfaces/IServiceResponse';
+import { badRequest, internal } from '@hapi/boom';
 
 export default class AuthService implements IAuthService {
   private userModel: Models.UserModel;
@@ -30,7 +26,9 @@ export default class AuthService implements IAuthService {
     this.authHelper = authHelper;
   }
 
-  public async LogInWithGoogle(userToken: string): Promise<IUser> {
+  public async LogInWithGoogle(
+    userToken: string
+  ): Promise<IServiceResponse<IUser>> {
     let payload: TokenPayload | undefined;
     let googleOauthClient: OAuth2Client = new OAuth2Client(
       config.googleClientId
@@ -44,16 +42,16 @@ export default class AuthService implements IAuthService {
 
       payload = ticket.getPayload();
     } catch (e) {
-      throw {
-        status: 400,
-        message: 'Incorrect user token',
+      return {
+        error: badRequest('Incorrect user token'),
+        payload: null,
       };
     }
 
     if (payload === undefined) {
-      throw {
-        status: 400,
-        message: 'Incorrect user token',
+      return {
+        error: badRequest('Incorrect user token'),
+        payload: null,
       };
     }
 
@@ -67,19 +65,30 @@ export default class AuthService implements IAuthService {
 
     if (!user) {
       if (!email) {
-        throw {
-          status: 400,
-          message: `User's email isn't provided in token`,
+        return {
+          error: badRequest(`User's email isn't provided in token`),
+          payload: null,
         };
       }
 
-      return await this.RegisterWithGoogle(email, sub);
+      let registered = await this.RegisterWithGoogle(email, sub);
+
+      return {
+        error: registered.error,
+        payload: registered.payload,
+      };
     }
 
-    return user;
+    return {
+      error: null,
+      payload: user,
+    };
   }
 
-  public async LogIn(email: string, password: string): Promise<IUser> {
+  public async LogIn(
+    email: string,
+    password: string
+  ): Promise<IServiceResponse<IUser>> {
     try {
       const user = await this.userModel
         .findOne({
@@ -92,18 +101,18 @@ export default class AuthService implements IAuthService {
         'You have entered incorrect email or password. Try again';
 
       if (!user) {
-        throw {
-          status: 400,
-          message: errorMessage,
+        return {
+          error: badRequest(errorMessage),
+          payload: null,
         };
       }
 
       const matches = await user.checkPassword(password);
 
       if (!matches) {
-        throw {
-          status: 400,
-          message: errorMessage,
+        return {
+          error: badRequest(errorMessage),
+          payload: null,
         };
       }
 
@@ -111,24 +120,27 @@ export default class AuthService implements IAuthService {
 
       this.loggingHelper.info(`Logged in user with email: ${email}`);
 
-      return user;
+      return {
+        error: null,
+        payload: user,
+      };
     } catch (e) {
-      if (e.status && e.message) {
-        throw e;
-      }
-
       this.loggingHelper.error(`Can't log in user with error: ${e}`, {
         email,
         password,
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
 
-  public async SignUp(email: string, password: string): Promise<IUser> {
+  public async SignUp(
+    email: string,
+    password: string
+  ): Promise<IServiceResponse<IUser>> {
     try {
       const user = await this.userModel.create({
         email: email,
@@ -139,12 +151,15 @@ export default class AuthService implements IAuthService {
 
       this.loggingHelper.info(`Signed up user with email: ${email}`);
 
-      return user;
+      return {
+        error: null,
+        payload: user,
+      };
     } catch (e) {
       if (e.errmsg.includes('duplicate')) {
-        throw {
-          status: 400,
-          message: 'This email is already taken. Try another one',
+        return {
+          error: badRequest('This email is already taken. Try another one'),
+          payload: null,
         };
       }
 
@@ -152,14 +167,15 @@ export default class AuthService implements IAuthService {
         email,
         password,
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
 
-  public async VerifyEmail(token: string): Promise<string> {
+  public async VerifyEmail(token: string): Promise<IServiceResponse<string>> {
     try {
       const payload: any = verify(token, config.secrets.emailSecret);
 
@@ -169,7 +185,10 @@ export default class AuthService implements IAuthService {
         { new: true }
       );
 
-      return `${config.webApplicationUrl}/login/?verified=true`;
+      return {
+        error: null,
+        payload: `${config.webApplicationUrl}/login/?verified=true`,
+      };
     } catch (e) {
       try {
         const payload: any = jwtDecode(token);
@@ -178,17 +197,24 @@ export default class AuthService implements IAuthService {
           `Failed to verify email for user: ${payload.id}`
         );
 
-        return `${config.webApplicationUrl}/signup/verify/?email=${payload.email}&failed=true`;
+        const redirectUrl = `${config.webApplicationUrl}/signup/verify/?email=${payload.email}&failed=true`;
+
+        return {
+          error: null,
+          payload: redirectUrl,
+        };
       } catch (e) {
-        throw {
-          status: 400,
-          message: 'Received incorrect token',
+        return {
+          error: badRequest('Received incorrect token'),
+          payload: null,
         };
       }
     }
   }
 
-  public async ResendVerificationEmail(email: string): Promise<IUser> {
+  public async ResendVerificationEmail(
+    email: string
+  ): Promise<IServiceResponse<IUser>> {
     try {
       const user = await this.userModel
         .findOne({
@@ -198,9 +224,11 @@ export default class AuthService implements IAuthService {
         .exec();
 
       if (user === null) {
-        throw {
-          status: 400,
-          message: `User with provided email doesn't exist or it is already verified`,
+        return {
+          error: badRequest(
+            `User with provided email doesn't exist or it is already verified`
+          ),
+          payload: null,
         };
       }
 
@@ -212,20 +240,21 @@ export default class AuthService implements IAuthService {
         `Resent verification email to user with email: ${email}`
       );
 
-      return user;
+      return {
+        error: null,
+        payload: user,
+      };
     } catch (e) {
-      if (e.status && e.message) {
-        throw e;
-      }
-
-      throw {
-        status: 400,
-        message: 'Received incorrect email address',
+      return {
+        error: badRequest('Received incorrect email address'),
+        payload: null,
       };
     }
   }
 
-  public async RefreshToken(token: string): Promise<IRefreshTokenResponse> {
+  public async RefreshToken(
+    token: string
+  ): Promise<IServiceResponse<IRefreshTokenResponse>> {
     let response: IRefreshTokenResponse = {
       ok: false,
       accessToken: '',
@@ -237,7 +266,10 @@ export default class AuthService implements IAuthService {
       this.loggingHelper.debug('Received empty token for refresh', {
         token: token,
       });
-      return response;
+      return {
+        error: null,
+        payload: response,
+      };
     }
 
     let payload: any = null;
@@ -248,7 +280,10 @@ export default class AuthService implements IAuthService {
       this.loggingHelper.debug('Received incorrect token for refresh', {
         token: token,
       });
-      return response;
+      return {
+        error: null,
+        payload: response,
+      };
     }
 
     const user = await this.userModel.findById(payload.id).exec();
@@ -260,7 +295,10 @@ export default class AuthService implements IAuthService {
           token: token,
         }
       );
-      return response;
+      return {
+        error: null,
+        payload: response,
+      };
     }
 
     if (user.tokenVersion !== payload.tokenVersion) {
@@ -270,7 +308,10 @@ export default class AuthService implements IAuthService {
         tokenVersion: payload.tokenVersion,
       });
 
-      return response;
+      return {
+        error: null,
+        payload: response,
+      };
     }
 
     let accessToken = this.authHelper.createAccessToken(user);
@@ -282,17 +323,20 @@ export default class AuthService implements IAuthService {
     this.loggingHelper.info(`Refreshed access token for user: ${user.id}`);
 
     return {
-      ok: true,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      isSessionToken: payload.isSessionToken,
+      error: null,
+      payload: {
+        ok: true,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        isSessionToken: payload.isSessionToken,
+      },
     };
   }
 
   private async RegisterWithGoogle(
     email: string,
     externalId: string
-  ): Promise<IUser> {
+  ): Promise<IServiceResponse<IUser>> {
     try {
       let newUser = {
         email: email,
@@ -303,21 +347,24 @@ export default class AuthService implements IAuthService {
 
       this.loggingHelper.info(`Registered user with Google: ${email}`);
 
-      return registeredUser;
+      return {
+        error: null,
+        payload: registeredUser,
+      };
     } catch (e) {
       if (e.errmsg.includes('duplicate')) {
-        throw {
-          status: 400,
-          message: 'This email is already taken. Try another one',
+        return {
+          error: badRequest('This email is already taken. Try another one'),
+          payload: null,
         };
       }
 
       this.loggingHelper.error(`Can't register user with Google: ${e}`, {
         userEmail: email,
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
