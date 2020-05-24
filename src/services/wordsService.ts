@@ -4,6 +4,8 @@ import { Types } from 'mongoose';
 import { shuffle } from 'lodash';
 import { ISavedWordsResponse, IWordsService } from './interfaces/IWordsService';
 import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
+import { IServiceResponse } from '../interfaces/IServiceResponse';
+import { internal, badRequest } from '@hapi/boom';
 
 export default class WordsService implements IWordsService {
   private pageSize = 15;
@@ -21,7 +23,7 @@ export default class WordsService implements IWordsService {
   public async CreateWordPair(
     userId: string,
     wordPair: Partial<IWordPair>
-  ): Promise<IWordPair> {
+  ): Promise<IServiceResponse<IWordPair>> {
     try {
       let nextRepetitionDate = moment().add(
         wordPair.repetitionInterval,
@@ -36,24 +38,29 @@ export default class WordsService implements IWordsService {
 
       this.loggingHelper.info(`Created new word pair for user: ${userId}`);
 
-      return newWordPair;
+      return {
+        error: null,
+        payload: newWordPair,
+      };
     } catch (e) {
       this.loggingHelper.error(`Can't create new word pair: ${e}`, {
         userId: userId,
         requestData: wordPair,
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
 
-  public async GetWordsForRepeating(userId: string): Promise<IWordPair[]> {
+  public async GetWordsForRepeating(
+    userId: string
+  ): Promise<IServiceResponse<IWordPair[]>> {
     try {
       let todayDate = new Date();
 
-      let words = await this.wordPairModel
+      let words: IWordPair[] = await this.wordPairModel
         .aggregate()
         .match({
           userId: Types.ObjectId(userId),
@@ -80,14 +87,18 @@ export default class WordsService implements IWordsService {
       words = shuffle(words);
 
       this.loggingHelper.info(`Sent words for repeating to user: ${userId}`);
-      return words;
+
+      return {
+        error: null,
+        payload: words,
+      };
     } catch (e) {
       this.loggingHelper.error(`Can't get words for repeating: ${e}`, {
         userId: userId,
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
@@ -96,7 +107,7 @@ export default class WordsService implements IWordsService {
     page: number,
     word: string,
     userId: string
-  ): Promise<ISavedWordsResponse> {
+  ): Promise<IServiceResponse<ISavedWordsResponse>> {
     try {
       const [words, count] = await Promise.all([
         this.wordPairModel
@@ -124,19 +135,24 @@ export default class WordsService implements IWordsService {
 
       this.loggingHelper.info(`Sent saved words for user: ${userId}`);
 
-      return {
+      let result = {
         data: words,
         page,
         next,
+      };
+
+      return {
+        error: null,
+        payload: result,
       };
     } catch (e) {
       this.loggingHelper.error(`Can't send saved words: ${e}`, {
         userId: userId,
         requestData: { page, word },
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
@@ -145,7 +161,7 @@ export default class WordsService implements IWordsService {
     wordPair: Partial<IWordPair>,
     wordPairId: string,
     userId: string
-  ): Promise<IWordPair> {
+  ): Promise<IServiceResponse<IWordPair>> {
     let updatedDoc: IWordPair | null;
 
     try {
@@ -164,25 +180,30 @@ export default class WordsService implements IWordsService {
         userId: userId,
         requestData: { wordPair, wordPairId, userId },
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
 
     if (!updatedDoc) {
-      throw {
-        status: 400,
-        message: 'Received incorrect word pair',
+      return {
+        error: badRequest('Received incorrect word pair'),
+        payload: null,
       };
     }
 
     this.loggingHelper.info(`Updated word pair for user: ${userId}`);
 
-    return updatedDoc;
+    return {
+      error: null,
+      payload: updatedDoc,
+    };
   }
 
-  public async GetWordsCount(userId: string): Promise<number> {
+  public async GetWordsCount(
+    userId: string
+  ): Promise<IServiceResponse<number>> {
     try {
       let todayDate = new Date();
       const result = await this.wordPairModel
@@ -201,14 +222,18 @@ export default class WordsService implements IWordsService {
         .exec();
 
       this.loggingHelper.info(`Sent words count for user: ${userId}`);
-      return result[0]?.documentsCount || 0;
+
+      return {
+        error: null,
+        payload: result[0]?.documentsCount || 0,
+      };
     } catch (e) {
       this.loggingHelper.error(`Can't send words count: ${e}`, {
         userId: userId,
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
@@ -216,7 +241,7 @@ export default class WordsService implements IWordsService {
   public async WordPairExists(
     sourceWord: string,
     userId: string
-  ): Promise<boolean> {
+  ): Promise<IServiceResponse<boolean>> {
     try {
       const exists = await this.wordPairModel.exists({
         userId: userId,
@@ -226,15 +251,18 @@ export default class WordsService implements IWordsService {
       this.loggingHelper.info(
         `Sent word pair existence result to user: ${userId}`
       );
-      return exists;
+      return {
+        error: null,
+        payload: exists,
+      };
     } catch (e) {
       this.loggingHelper.error(`Can't send word pair existence result: ${e}`, {
         userId: userId,
         requestData: { sourceWord },
       });
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }

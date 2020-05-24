@@ -1,4 +1,5 @@
 import IWordPair from '../../interfaces/IWordPair';
+import { IServiceResponse } from '../../interfaces/IServiceResponse';
 
 export interface ISavedWordsResponse {
   data: IWordPair[];
@@ -10,18 +11,21 @@ export interface IWordsService {
   CreateWordPair(
     userId: string,
     wordPair: Partial<IWordPair>
-  ): Promise<IWordPair>;
-  GetWordsForRepeating(userId: string): Promise<IWordPair[]>;
+  ): Promise<IServiceResponse<IWordPair>>;
+  GetWordsForRepeating(userId: string): Promise<IServiceResponse<IWordPair[]>>;
   GetSavedWords(
     page: number,
     word: string,
     userId: string
-  ): Promise<ISavedWordsResponse>;
+  ): Promise<IServiceResponse<ISavedWordsResponse>>;
   UpdateWordPair(
     wordPair: Partial<IWordPair>,
     wordPairId: string,
     userId: string
-  ): Promise<IWordPair>;
-  GetWordsCount(userId: string): Promise<number>;
-  WordPairExists(sourceWord: string, userId: string): Promise<boolean>;
+  ): Promise<IServiceResponse<IWordPair>>;
+  GetWordsCount(userId: string): Promise<IServiceResponse<number>>;
+  WordPairExists(
+    sourceWord: string,
+    userId: string
+  ): Promise<IServiceResponse<boolean>>;
 }

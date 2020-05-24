@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { IWordsService } from '../../services/interfaces/IWordsService';
 import { IWordsController } from './interfaces/IWordsController';
 
@@ -9,82 +9,108 @@ export default class WordsController implements IWordsController {
     this.wordsService = wordsService;
   }
 
-  async createPair(req: Request, res: Response): Promise<void> {
-    try {
-      let newWordPair = await this.wordsService.CreateWordPair(
-        req.user.id,
-        req.body
-      );
+  async createPair(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    let { error, payload } = await this.wordsService.CreateWordPair(
+      req.user.id,
+      req.body
+    );
 
-      res.status(200).json({ data: newWordPair });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error) {
+      return next(error);
     }
+
+    res.status(200).json({ data: payload });
   }
 
-  async getWordsForRepeating(req: Request, res: Response): Promise<void> {
-    try {
-      let words = await this.wordsService.GetWordsForRepeating(req.user.id);
+  async getWordsForRepeating(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    let { error, payload } = await this.wordsService.GetWordsForRepeating(
+      req.user.id
+    );
 
-      res.status(200).json({ data: words });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error) {
+      return next(error);
     }
+
+    res.status(200).json({ data: payload });
   }
 
-  async getSavedWords(req: Request, res: Response): Promise<void> {
+  async getSavedWords(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     const page = Number.parseInt(req.params.page);
     const { word } = req.body;
 
-    try {
-      let words = await this.wordsService.GetSavedWords(
-        page,
-        word,
-        req.user.id
-      );
+    let { error, payload } = await this.wordsService.GetSavedWords(
+      page,
+      word,
+      req.user.id
+    );
 
-      res.status(200).json(words);
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error) {
+      return next(error);
     }
+
+    res.status(200).json(payload);
   }
 
-  async updateWordsPair(req: Request, res: Response): Promise<void> {
-    try {
-      let updatedWordPair = await this.wordsService.UpdateWordPair(
-        req.body,
-        req.params.id,
-        req.user.id
-      );
+  async updateWordsPair(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    let { error, payload } = await this.wordsService.UpdateWordPair(
+      req.body,
+      req.params.id,
+      req.user.id
+    );
 
-      res.status(200).json({ data: updatedWordPair });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error) {
+      return next(error);
     }
+
+    res.status(200).json({ data: payload });
   }
 
-  async getWordsCount(req: Request, res: Response): Promise<void> {
-    try {
-      let count = await this.wordsService.GetWordsCount(req.user.id);
+  async getWordsCount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    let { error, payload } = await this.wordsService.GetWordsCount(req.user.id);
 
-      res.status(200).json({ data: count });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error) {
+      return next(error);
     }
+
+    res.status(200).json({ data: payload });
   }
 
-  async existsWordPair(req: Request, res: Response): Promise<void> {
+  async existsWordPair(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     let { sourceWord } = req.body;
 
-    try {
-      let exists = await this.wordsService.WordPairExists(
-        sourceWord,
-        req.user.id
-      );
+    let { error, payload } = await this.wordsService.WordPairExists(
+      sourceWord,
+      req.user.id
+    );
 
-      res.status(200).json({ data: exists });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error) {
+      return next(error);
     }
+
+    res.status(200).json({ data: payload });
   }
 }
