@@ -3,6 +3,8 @@ import { IAccountService } from './interfaces/IAccountService';
 import PubSub from 'pubsub-js';
 import events from '../subscribers/events';
 import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
+import { IServiceResponse } from '../interfaces/IServiceResponse';
+import { badRequest, internal } from '@hapi/boom';
 
 export default class AccountService implements IAccountService {
   private loggingHelper: ILoggingHelper;
@@ -15,13 +17,13 @@ export default class AccountService implements IAccountService {
     user: IUserModel,
     oldPassword: string,
     newPassword: string
-  ): Promise<void> {
+  ): Promise<IServiceResponse<void>> {
     let correctOldPassword = await user.checkPassword(oldPassword);
 
     if (!correctOldPassword) {
-      throw {
-        status: 400,
-        message: 'Incorrect old password',
+      return {
+        error: badRequest('Incorrect old password'),
+        payload: null,
       };
     }
 
@@ -31,6 +33,11 @@ export default class AccountService implements IAccountService {
       await user.save();
 
       this.loggingHelper.info(`Changed password for user: ${user._id}`);
+
+      return {
+        error: null,
+        payload: null,
+      };
     } catch (e) {
       this.loggingHelper.error(`Can't update password for user: ${e}`, {
         userId: user._id,
@@ -38,14 +45,17 @@ export default class AccountService implements IAccountService {
         newPassword: newPassword,
       });
 
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
 
-  public async UpdateEmail(user: IUserModel, newEmail: string): Promise<void> {
+  public async UpdateEmail(
+    user: IUserModel,
+    newEmail: string
+  ): Promise<IServiceResponse<void>> {
     try {
       user.email = newEmail;
       user.isVerified = false;
@@ -55,11 +65,16 @@ export default class AccountService implements IAccountService {
       PubSub.publish(events.user.UPDATED_EMAIL, { user });
 
       this.loggingHelper.info(`Changed email for user: ${user._id}`);
+
+      return {
+        error: null,
+        payload: null,
+      };
     } catch (e) {
       if (e.errmsg.includes('duplicate')) {
-        throw {
-          status: 400,
-          message: 'This email is already taken. Try another one',
+        return {
+          error: badRequest('This email is already taken. Try another one'),
+          payload: null,
         };
       }
 
@@ -68,24 +83,29 @@ export default class AccountService implements IAccountService {
         newEmail: newEmail,
       });
 
-      throw {
-        status: 500,
-        message: 'Internal server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
 
-  public async RevokeToken(user: IUserModel): Promise<void> {
+  public async RevokeToken(user: IUserModel): Promise<IServiceResponse<void>> {
     try {
       user.tokenVersion++;
 
       await user.save();
 
       this.loggingHelper.info(`Revoked access token for user: ${user.id}`);
+
+      return {
+        error: null,
+        payload: null,
+      };
     } catch (e) {
-      throw {
-        status: 500,
-        message: 'Interval server error',
+      return {
+        error: internal('Internal server error'),
+        payload: null,
       };
     }
   }
