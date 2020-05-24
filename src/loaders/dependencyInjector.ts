@@ -11,6 +11,7 @@ import WordsController from '../api/controllers/wordsController';
 import UserReducer from '../subscribers/user/userReducer';
 import EmailHelper from '../helpers/emailHelper';
 import SecurityMiddleware from '../api/middlewares/securityMiddleware';
+import ErrorsMiddleware from '../api/middlewares/errorsMiddleware';
 
 // Initializing mongoose models for DI.
 const models = [
@@ -62,6 +63,7 @@ try {
   // Middlewares injection.
   container.register({
     securityMiddleware: asClass(SecurityMiddleware),
+    errorsMiddleware: asClass(ErrorsMiddleware),
   });
 } catch (e) {
   console.error(`Can't initialize dependency injection : `, e);

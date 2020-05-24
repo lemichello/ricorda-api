@@ -1,5 +1,6 @@
 import { IUserService } from './interfaces/IUserService';
 import { IUserModel } from '../models/userModel';
+import { IServiceResponse } from '../interfaces/IServiceResponse';
 
 export default class UserService implements IUserService {
   private userModel: Models.UserModel;
@@ -8,7 +9,14 @@ export default class UserService implements IUserService {
     this.userModel = userModel;
   }
 
-  public async GetUserById(id: string): Promise<IUserModel | null> {
-    return await this.userModel.findById(id).exec();
+  public async GetUserById(
+    id: string
+  ): Promise<IServiceResponse<IUserModel | null>> {
+    const user = await this.userModel.findById(id).exec();
+
+    return {
+      error: null,
+      payload: user,
+    };
   }
 }

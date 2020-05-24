@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { IAuthService } from '../../services/interfaces/IAuthService';
 import { IAuthController } from './interfaces/IAuthController';
 import { IAuthHelper } from '../../helpers/interfaces/IAuthHelper';
@@ -12,105 +12,130 @@ export default class AuthController implements IAuthController {
     this.authHelper = authHelper;
   }
 
-  async logIn(req: Request, res: Response): Promise<any> {
+  async logIn(req: Request, res: Response, next: NextFunction): Promise<any> {
     const { email, password, rememberMe } = req.body;
+    const { error, payload } = await this.authService.LogIn(email, password);
 
-    try {
-      let user = await this.authService.LogIn(email, password);
-
-      if (!user.isVerified) {
-        return res.status(403).json({ email: email });
-      }
-
-      this.authHelper.sendRefreshToken(
-        res,
-        this.authHelper.createRefreshToken(user, !rememberMe),
-        !rememberMe
-      );
-
-      res.status(200).json({ token: this.authHelper.createAccessToken(user) });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error !== null) {
+      return next(error);
     }
+
+    if (!payload!.isVerified) {
+      return res.status(403).json({ email: email });
+    }
+
+    this.authHelper.sendRefreshToken(
+      res,
+      this.authHelper.createRefreshToken(payload!, !rememberMe),
+      !rememberMe
+    );
+
+    res
+      .status(200)
+      .json({ token: this.authHelper.createAccessToken(payload!) });
   }
 
-  async logInWithGoogle(req: Request, res: Response): Promise<any> {
+  async logInWithGoogle(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
     let token = req.headers.authorization;
 
     if (!token) {
       return res.status(400).send('Received empty user token');
     }
 
-    try {
-      let user = await this.authService.LogInWithGoogle(token);
+    const { error, payload } = await this.authService.LogInWithGoogle(token);
 
-      this.authHelper.sendRefreshToken(
-        res,
-        this.authHelper.createRefreshToken(user, false),
-        false
-      );
-
-      res.status(200).json({ token: this.authHelper.createAccessToken(user) });
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error !== null) {
+      return next(error);
     }
+
+    this.authHelper.sendRefreshToken(
+      res,
+      this.authHelper.createRefreshToken(payload!, false),
+      false
+    );
+
+    res
+      .status(200)
+      .json({ token: this.authHelper.createAccessToken(payload!) });
   }
 
-  async logOut(req: Request, res: Response): Promise<void> {
+  async logOut(
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     this.authHelper.sendRefreshToken(res, '', true);
     res.status(200).send('Successfully logged out');
   }
 
-  async signUp(req: Request, res: Response): Promise<void> {
+  async signUp(req: Request, res: Response, next: NextFunction): Promise<any> {
     const { email, password } = req.body;
+    const { error } = await this.authService.SignUp(email, password);
 
-    try {
-      await this.authService.SignUp(email, password);
-
-      res.status(201).send('Successfully signed up');
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error !== null) {
+      return next(error);
     }
+
+    res.status(201).send('Successfully signed up');
   }
 
-  async verifyEmail(req: Request, res: Response): Promise<void> {
+  async verifyEmail(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
     const { token } = req.params;
+    const { error, payload } = await this.authService.VerifyEmail(token);
 
-    try {
-      const redirectUrl = await this.authService.VerifyEmail(token);
-
-      res.redirect(redirectUrl);
-    } catch (e) {
-      res.status(e.status).send(e.message);
+    if (error !== null) {
+      return next(error);
     }
+
+    res.redirect(payload!);
   }
 
-  async resendEmailVerification(req: Request, res: Response): Promise<void> {
+  async resendEmailVerification(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
     const { email } = req.body;
 
-    try {
-      await this.authService.ResendVerificationEmail(email);
+    const { error } = await this.authService.ResendVerificationEmail(email);
 
-      res.status(200).send('Successfully resent verification email');
-    } catch (e) {
-      res.status(400).send('Received incorrect email address');
+    if (error !== null) {
+      return next(error);
     }
+
+    res.status(200).send('Successfully resent verification email');
   }
 
-  async refreshToken(req: Request, res: Response): Promise<void> {
+  async refreshToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
     const token = req.cookies.acctkn;
 
-    let response = await this.authService.RefreshToken(token);
+    let { error, payload } = await this.authService.RefreshToken(token);
+
+    if (error !== null) {
+      return next(error);
+    }
 
     this.authHelper.sendRefreshToken(
       res,
-      response.refreshToken,
-      response.isSessionToken
+      payload!.refreshToken,
+      payload!.isSessionToken
     );
 
     res.json({
-      ok: response.ok,
-      accessToken: response.accessToken,
+      ok: payload!.ok,
+      accessToken: payload!.accessToken,
     });
   }
 }

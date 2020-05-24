@@ -11,10 +11,14 @@ import accountRouter from '../api/routes/accountRouter';
 import { errors } from 'celebrate';
 import { ISecurityMiddleware } from '../api/middlewares/interfaces/ISecurityMiddleware';
 import config from '../config';
+import { IErrorsMiddleware } from '../api/middlewares/interfaces/IErrorsMiddleware';
 
 export default (app: express.Application) => {
   const securityMiddleware = container.resolve<ISecurityMiddleware>(
     'securityMiddleware'
+  );
+  const errorsMiddleware = container.resolve<IErrorsMiddleware>(
+    'errorsMiddleware'
   );
 
   app.use(
@@ -40,4 +44,6 @@ export default (app: express.Application) => {
   app.use('/api/account', accountRouter);
 
   app.use(errors());
+
+  app.use(errorsMiddleware.handleError.bind(errorsMiddleware));
 };
