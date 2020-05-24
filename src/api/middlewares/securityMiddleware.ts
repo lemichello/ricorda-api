@@ -27,7 +27,13 @@ export default class SecurityMiddleware implements ISecurityMiddleware {
       return res.status(401).send('Incorrect access token');
     }
 
-    const user = await this.userService.GetUserById(payload.id);
+    const { error, payload: user } = await this.userService.GetUserById(
+      payload.id
+    );
+
+    if (error) {
+      return next(error);
+    }
 
     if (!user) {
       return res.status(401).send('Incorrect access token');
