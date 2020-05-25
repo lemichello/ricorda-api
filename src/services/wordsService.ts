@@ -118,7 +118,7 @@ export default class WordsService implements IWordsService {
           ])
           .limit(this.pageSize)
           .skip((page - 1) * this.pageSize)
-          .sort({ repetitions: 1, sourceWord: 1 })
+          .sort({ repetitions: 1, maxRepetitions: -1, sourceWord: 1 })
           .select('-userId -__v -repetitionInterval')
           .lean()
           .exec(),
@@ -133,10 +133,22 @@ export default class WordsService implements IWordsService {
 
       const next = count > this.pageSize * page;
 
+      /**
+       * Sorting words by their 'finished' value.
+       * e.g. {repetitions: 1, maxRepetitions: 2} word pair will be treated as
+       * more finished than {repetitions: 2, maxRepetitions: 5} word pair,
+       * because the 'finished' value of the first word pair will be 0.5, whereas
+       * second pair's value will be 0.4.
+       */
+      const sortedWords = words.sort(
+        (a, b) =>
+          a.repetitions / a.maxRepetitions - b.repetitions / b.maxRepetitions
+      );
+
       this.loggingHelper.info(`Sent saved words for user: ${userId}`);
 
       let result = {
-        data: words,
+        data: sortedWords,
         page,
         next,
       };
