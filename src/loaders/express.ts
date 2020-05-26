@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import cors from 'cors';
 import container from './dependencyInjector';
+import compression from 'compression';
 
 import authRouter from '../api/routes/authRouter';
 import wordsRouter from '../api/routes/wordsRouter';
@@ -37,6 +38,7 @@ export default (app: express.Application) => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
+  app.use(compression());
 
   app.use('/auth', authRouter);
   app.use('/api', securityMiddleware.protect.bind(securityMiddleware));
@@ -44,6 +46,5 @@ export default (app: express.Application) => {
   app.use('/api/account', accountRouter);
 
   app.use(errors());
-
   app.use(errorsMiddleware.handleError.bind(errorsMiddleware));
 };
