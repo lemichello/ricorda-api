@@ -342,6 +342,7 @@ export default class AuthService implements IAuthService {
         email: email,
         externalType: 'Google',
         externalId: externalId,
+        isVerified: true,
       };
       let registeredUser = await this.userModel.create(newUser);
 
