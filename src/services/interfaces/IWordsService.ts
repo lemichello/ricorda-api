@@ -2,7 +2,10 @@ import IWordPair from '../../interfaces/IWordPair';
 import { IServiceResponse } from '../../interfaces/IServiceResponse';
 
 export interface ISavedWordsResponse {
-  data: IWordPair[];
+  data: {
+    words: IWordPair[];
+    count: number;
+  };
   page: number;
   next: boolean;
 }

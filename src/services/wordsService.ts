@@ -147,8 +147,11 @@ export default class WordsService implements IWordsService {
 
       this.loggingHelper.info(`Sent saved words for user: ${userId}`);
 
-      let result = {
-        data: sortedWords,
+      let result: ISavedWordsResponse = {
+        data: {
+          words: sortedWords,
+          count: count,
+        },
         page,
         next,
       };
