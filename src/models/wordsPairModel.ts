@@ -20,12 +20,12 @@ let wordsPairSchema: Schema = new mongoose.Schema({
   userId: {
     type: ObjectId,
     required: true,
+    index: true,
   },
   sourceWord: {
     type: String,
     required: true,
     trim: true,
-    index: true,
   },
   translation: {
     type: String,
