@@ -1,6 +1,7 @@
 import { IUserService } from './interfaces/IUserService';
 import { IUserModel } from '../models/userModel';
 import { IServiceResponse } from '../interfaces/IServiceResponse';
+import { badRequest } from '@hapi/boom';
 
 export default class UserService implements IUserService {
   private userModel: Models.UserModel;
@@ -12,11 +13,18 @@ export default class UserService implements IUserService {
   public async GetUserById(
     id: string
   ): Promise<IServiceResponse<IUserModel | null>> {
-    const user = await this.userModel.findById(id).exec();
+    try {
+      const user = await this.userModel.findById(id).exec();
 
-    return {
-      error: null,
-      payload: user,
-    };
+      return {
+        error: null,
+        payload: user,
+      };
+    } catch (e) {
+      return {
+        error: badRequest('Received incorrect user id'),
+        payload: null,
+      };
+    }
   }
 }
