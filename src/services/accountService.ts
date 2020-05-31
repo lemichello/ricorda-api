@@ -71,7 +71,7 @@ export default class AccountService implements IAccountService {
         payload: null,
       };
     } catch (e) {
-      if (e.errmsg.includes('duplicate')) {
+      if (e.errmsg?.includes('duplicate')) {
         return {
           error: badRequest('This email is already taken. Try another one'),
           payload: null,
