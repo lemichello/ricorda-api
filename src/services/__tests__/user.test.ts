@@ -1,10 +1,9 @@
 import chai from 'chai';
 import { IUserService } from '../interfaces/IUserService';
 import UserService from '../userService';
-import { createStubInstance, stub, SinonStub } from 'sinon';
+import { stub, SinonStub } from 'sinon';
 import faker from 'faker';
-import userModel, { IUserModel } from '../../models/userModel';
-import { IServiceResponse } from '../../interfaces/IServiceResponse';
+import userModel from '../../models/userModel';
 
 let expect = chai.expect;
 
