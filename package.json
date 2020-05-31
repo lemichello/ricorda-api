@@ -9,7 +9,8 @@
     "start": "tsc --build tsconfig.prod.json  && cross-env NODE_ENV=prod node ./build/app.js",
     "debug": "tsc && cross-env NODE_ENV=dev node --inspect ./build/app.js",
     "test": "tsc && mocha \"./build/**/__tests__/*.test.js\"",
-    "test:helpers": "tsc && mocha \"./build/helpers/__tests__/*.test.js\""
+    "test:helpers": "tsc && mocha \"./build/helpers/__tests__/*.test.js\"",
+    "test:services": "tsc && mocha \"./build/services/__tests__/*.test.js\""
   },
   "engines": {
     "node": "14.x"
