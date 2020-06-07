@@ -12,4 +12,5 @@ export interface IAccountService {
     newEmail: string
   ): Promise<IServiceResponse<void>>;
   RevokeToken(user: IUserModel): Promise<IServiceResponse<void>>;
+  GetRegistrationType(user: IUserModel): Promise<IServiceResponse<string>>;
 }

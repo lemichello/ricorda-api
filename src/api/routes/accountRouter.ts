@@ -32,4 +32,9 @@ router.post(
   controller.revokeRefreshToken.bind(controller)
 );
 
+router.get(
+  '/registration-type',
+  controller.getRegistrationType.bind(controller)
+);
+
 export default router;

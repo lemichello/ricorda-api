@@ -4,7 +4,7 @@ import PubSub from 'pubsub-js';
 import events from '../subscribers/events';
 import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 import { IServiceResponse } from '../interfaces/IServiceResponse';
-import { badRequest, internal } from '@hapi/boom';
+import { badRequest, internal, forbidden } from '@hapi/boom';
 
 export default class AccountService implements IAccountService {
   private loggingHelper: ILoggingHelper;
@@ -18,6 +18,15 @@ export default class AccountService implements IAccountService {
     oldPassword: string,
     newPassword: string
   ): Promise<IServiceResponse<void>> {
+    if (user.externalType) {
+      return {
+        error: forbidden(
+          `You can't change your password, as you are signed up with ${user.externalType}`
+        ),
+        payload: null,
+      };
+    }
+
     let correctOldPassword = await user.checkPassword(oldPassword);
 
     if (!correctOldPassword) {
@@ -108,5 +117,16 @@ export default class AccountService implements IAccountService {
         payload: null,
       };
     }
+  }
+
+  public async GetRegistrationType(
+    user: IUserModel
+  ): Promise<IServiceResponse<string>> {
+    let type = user.externalType;
+
+    return {
+      error: null,
+      payload: type ?? 'email',
+    };
   }
 }
