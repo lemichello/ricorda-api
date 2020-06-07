@@ -12,4 +12,9 @@ export interface IAccountController {
     res: Response,
     next: NextFunction
   ): Promise<void>;
+  getRegistrationType(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
 }

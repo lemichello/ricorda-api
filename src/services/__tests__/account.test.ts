@@ -13,6 +13,7 @@ interface IFakeUserModel {
   password: string;
   email: string;
   isVerified: boolean;
+  externalType: string | null;
   save: SinonStub<[], Promise<void>>;
   checkPassword: SinonStub<[string], Promise<boolean>>;
 }
@@ -35,6 +36,7 @@ describe('AccountService', () => {
         password: faker.internet.password(),
         email: faker.internet.email(),
         isVerified: faker.random.boolean(),
+        externalType: null,
         save: stub(),
         checkPassword: stub(),
       };
@@ -82,7 +84,26 @@ describe('AccountService', () => {
         });
     });
 
+    it("should return error, when user isn't signed up with email", (done) => {
+      // Arrange
+      fakeUserModel.externalType = 'Google';
+
+      // Act
+      accountServiceMock
+        .UpdatePassword(fakeUserModel as any, fakeNewPassword, fakeNewPassword)
+        .then(({ error, payload }) => {
+          // Assert
+          expect(error).not.to.be.null;
+          expect(error).to.be.instanceOf(Boom);
+          expect(error!.output.statusCode).to.be.equal(403);
+          expect(payload).to.be.null;
+
+          done();
+        });
+    });
+
     it("should update user's password", (done) => {
+      // Arrange
       fakeUserModel.password = fakeOldPassword;
 
       // Act
@@ -151,6 +172,7 @@ describe('AccountService', () => {
         password: faker.internet.password(),
         email: faker.internet.email(),
         isVerified: faker.random.boolean(),
+        externalType: null,
         save: stub(),
         checkPassword: stub(),
       };
@@ -250,7 +272,7 @@ describe('AccountService', () => {
           // Assert
           expect(error).not.to.be.null;
           expect(error).to.be.instanceOf(Boom);
-          expect(error?.output.statusCode).to.be.equal(400);
+          expect(error!.output.statusCode).to.be.equal(400);
           expect(payload).to.be.null;
 
           done();
@@ -270,6 +292,59 @@ describe('AccountService', () => {
           expect(error).to.be.instanceOf(Boom);
           expect(error?.output.statusCode).to.be.equal(500);
           expect(payload).to.be.null;
+
+          done();
+        });
+    });
+  });
+
+  describe('GetRegistrationType', () => {
+    let accountServiceMock: IAccountService;
+    let fakeUserModel: IFakeUserModel;
+    let fakeNewEmail: string;
+
+    beforeEach(() => {
+      fakeUserModel = {
+        _id: faker.random.uuid(),
+        password: faker.internet.password(),
+        email: faker.internet.email(),
+        isVerified: faker.random.boolean(),
+        externalType: null,
+        save: stub(),
+        checkPassword: stub(),
+      };
+
+      accountServiceMock = new AccountService(
+        createStubInstance(LoggingHelper)
+      );
+    });
+
+    it("should return 'email' registration type", (done) => {
+      // Act
+      accountServiceMock
+        .GetRegistrationType(fakeUserModel as any)
+        .then(({ error, payload }) => {
+          // Assert
+          expect(error).to.be.null;
+          expect(payload).to.be.equal('email');
+
+          done();
+        });
+    });
+
+    it('should return expected registration type', (done) => {
+      // Arrange
+      const expectedRegistrationType = faker.random.word();
+
+      fakeUserModel.externalType = expectedRegistrationType;
+
+      // Act
+      accountServiceMock
+        .GetRegistrationType(fakeUserModel as any)
+        .then(({ error, payload }) => {
+          // Assert
+          expect(error).to.be.null;
+          expect(payload).to.be.equal(expectedRegistrationType);
 
           done();
         });
