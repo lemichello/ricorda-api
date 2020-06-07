@@ -63,4 +63,22 @@ export default class AccountController implements IAccountController {
 
     res.status(200).send('Successfully revoked refresh token');
   }
+
+  public async getRegistrationType(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { error, payload } = await this.accountService.GetRegistrationType(
+      req.user
+    );
+
+    if (error) {
+      return next(error);
+    }
+
+    res.status(200).json({
+      data: payload,
+    });
+  }
 }
