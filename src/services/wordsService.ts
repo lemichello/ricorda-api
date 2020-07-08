@@ -6,6 +6,7 @@ import { ISavedWordsResponse, IWordsService } from './interfaces/IWordsService';
 import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 import { IServiceResponse } from '../interfaces/IServiceResponse';
 import { internal, badRequest } from '@hapi/boom';
+import { IWordPairModel } from '../models/wordsPairModel';
 
 export default class WordsService implements IWordsService {
   private pageSize = 15;
@@ -25,16 +26,15 @@ export default class WordsService implements IWordsService {
     wordPair: Partial<IWordPair>
   ): Promise<IServiceResponse<IWordPair>> {
     try {
-      let nextRepetitionDate = moment().add(
-        wordPair.repetitionInterval,
-        'hours'
-      );
+      let nextRepetitionDate = moment()
+        .add(wordPair.repetitionInterval, 'hours')
+        .toDate();
 
       let newWordPair = await this.wordPairModel.create({
         ...wordPair,
         nextRepetitionDate,
         userId: userId,
-      });
+      } as IWordPairModel);
 
       this.loggingHelper.info(`Created new word pair for user: ${userId}`);
 

@@ -10,6 +10,7 @@ import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 import { IAuthHelper } from '../helpers/interfaces/IAuthHelper';
 import { IServiceResponse } from '../interfaces/IServiceResponse';
 import { badRequest, internal } from '@hapi/boom';
+import { IUserModel } from '../models/userModel';
 
 export default class AuthService implements IAuthService {
   private userModel: Models.UserModel;
@@ -145,7 +146,7 @@ export default class AuthService implements IAuthService {
       const user = await this.userModel.create({
         email: email,
         password: password,
-      });
+      } as IUserModel);
 
       PubSub.publish(events.user.SIGNED_UP, { user });
 
@@ -344,7 +345,7 @@ export default class AuthService implements IAuthService {
         externalId: externalId,
         isVerified: true,
       };
-      let registeredUser = await this.userModel.create(newUser);
+      let registeredUser = await this.userModel.create(newUser as IUserModel);
 
       this.loggingHelper.info(`Registered user with Google: ${email}`);
 
