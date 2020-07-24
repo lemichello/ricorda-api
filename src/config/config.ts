@@ -2,6 +2,7 @@ export default interface IConfig {
   dbUrl: string;
   webApplicationUrl: string;
   apiRootUrl: string;
+  projectId: string;
   emailSenderAccount: {
     service: string | undefined;
     host: string | undefined;
@@ -16,6 +17,7 @@ export default interface IConfig {
   };
   logDnaKey: string;
   googleClientId: string;
+  googleTranslationAPIKey: string;
   secureCookies: boolean;
   corsWhitelist: string[];
 }

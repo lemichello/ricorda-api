@@ -8,6 +8,7 @@ import compression from 'compression';
 import authRouter from '../api/routes/authRouter';
 import wordsRouter from '../api/routes/wordsRouter';
 import accountRouter from '../api/routes/accountRouter';
+import translateRouter from '../api/routes/translateRouter';
 
 import { errors } from 'celebrate';
 import { ISecurityMiddleware } from '../api/middlewares/interfaces/ISecurityMiddleware';
@@ -44,6 +45,7 @@ export default (app: express.Application) => {
   app.use('/api', securityMiddleware.protect.bind(securityMiddleware));
   app.use('/api/words', wordsRouter);
   app.use('/api/account', accountRouter);
+  app.use('/api/translate', translateRouter);
 
   app.use(errors());
   app.use(errorsMiddleware.handleError.bind(errorsMiddleware));

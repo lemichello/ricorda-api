@@ -12,6 +12,8 @@ import UserReducer from '../subscribers/user/userReducer';
 import EmailHelper from '../helpers/emailHelper';
 import SecurityMiddleware from '../api/middlewares/securityMiddleware';
 import ErrorsMiddleware from '../api/middlewares/errorsMiddleware';
+import TranslateService from '../services/translateService';
+import TranslateController from '../api/controllers/translateController';
 
 // Initializing mongoose models for DI.
 const models = [
@@ -33,6 +35,7 @@ try {
     accountController: asClass(AccountController),
     authController: asClass(AuthController),
     wordsController: asClass(WordsController),
+    translateController: asClass(TranslateController),
   });
 
   // Services injection.
@@ -41,6 +44,7 @@ try {
     accountService: asClass(AccountService),
     userService: asClass(UserService),
     wordsService: asClass(WordsService),
+    translateService: asClass(TranslateService),
   });
 
   // Mongoose models injection.

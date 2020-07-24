@@ -27,6 +27,7 @@ function getUserMock(): IUser {
     tokenVersion: 0,
     externalId: null,
     externalType: null,
+    translationLanguage: faker.random.word(),
   };
 }
 
