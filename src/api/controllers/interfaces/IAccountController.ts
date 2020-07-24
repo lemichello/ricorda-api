@@ -12,7 +12,8 @@ export interface IAccountController {
     res: Response,
     next: NextFunction
   ): Promise<void>;
-  getRegistrationType(
+  getUserInfo(req: Request, res: Response, next: NextFunction): Promise<void>;
+  updateTranslationLanguage(
     req: Request,
     res: Response,
     next: NextFunction

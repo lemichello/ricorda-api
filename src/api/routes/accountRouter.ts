@@ -32,9 +32,16 @@ router.post(
   controller.revokeRefreshToken.bind(controller)
 );
 
-router.get(
-  '/registration-type',
-  controller.getRegistrationType.bind(controller)
+router.get('/info', controller.getUserInfo.bind(controller));
+
+router.put(
+  '/info/translation-language',
+  celebrate({
+    body: Joi.object({
+      translationLanguage: Joi.string().not().empty().uppercase().required(),
+    }),
+  }),
+  controller.updateTranslationLanguage.bind(controller)
 );
 
 export default router;

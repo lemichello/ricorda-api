@@ -5,6 +5,7 @@ import events from '../subscribers/events';
 import { ILoggingHelper } from '../helpers/interfaces/ILoggingHelper';
 import { IServiceResponse } from '../interfaces/IServiceResponse';
 import { badRequest, internal, forbidden } from '@hapi/boom';
+import { IUserInfo } from '../interfaces/IUserInfo';
 
 export default class AccountService implements IAccountService {
   private loggingHelper: ILoggingHelper;
@@ -119,14 +120,28 @@ export default class AccountService implements IAccountService {
     }
   }
 
-  public async GetRegistrationType(
+  public async GetUserInfo(
     user: IUserModel
-  ): Promise<IServiceResponse<string>> {
-    let type = user.externalType;
+  ): Promise<IServiceResponse<IUserInfo>> {
+    const userInfo: IUserInfo = {
+      externalType: user.externalType ?? 'email',
+      translationLanguage: user.translationLanguage,
+    };
 
     return {
       error: null,
-      payload: type ?? 'email',
+      payload: userInfo,
     };
+  }
+
+  public async UpdateTranslationLanguage(
+    user: IUserModel,
+    translationLanguage: string
+  ): Promise<IServiceResponse<IUserInfo>> {
+    user.translationLanguage = translationLanguage;
+
+    await user.save();
+
+    return await this.GetUserInfo(user);
   }
 }

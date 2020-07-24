@@ -6,4 +6,5 @@ export interface IUser {
   tokenVersion: number;
   externalType: 'Google' | null;
   externalId: string | null;
+  translationLanguage: string;
 }

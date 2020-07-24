@@ -9,6 +9,7 @@ interface IUserSchema extends Document {
   tokenVersion: number;
   externalType: 'Google' | null;
   externalId: string | null;
+  translationLanguage: string;
 }
 
 interface IUserBase extends IUserSchema {
@@ -43,6 +44,10 @@ const userSchema: Schema = new mongoose.Schema({
   },
   externalId: {
     type: String,
+  },
+  translationLanguage: {
+    type: String,
+    default: 'EN',
   },
 });
 
