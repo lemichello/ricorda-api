@@ -1,5 +1,6 @@
 import { IUserModel } from '../../models/userModel';
 import { IServiceResponse } from '../../interfaces/IServiceResponse';
+import { IUserInfo } from '../../interfaces/IUserInfo';
 
 export interface IAccountService {
   UpdatePassword(
@@ -12,5 +13,9 @@ export interface IAccountService {
     newEmail: string
   ): Promise<IServiceResponse<void>>;
   RevokeToken(user: IUserModel): Promise<IServiceResponse<void>>;
-  GetRegistrationType(user: IUserModel): Promise<IServiceResponse<string>>;
+  GetUserInfo(user: IUserModel): Promise<IServiceResponse<IUserInfo>>;
+  UpdateTranslationLanguage(
+    user: IUserModel,
+    translationLanguage: string
+  ): Promise<IServiceResponse<IUserInfo>>;
 }

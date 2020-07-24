@@ -233,7 +233,7 @@ describe('AccountService', () => {
       // Act
       accountServiceMock
         .UpdateEmail(fakeUserModel as any, fakeNewEmail)
-        .then(({ error, payload }) => {
+        .then(() => {
           receivedArgs = pubSubStub.getCall(0).args;
 
           // Assert
@@ -292,59 +292,6 @@ describe('AccountService', () => {
           expect(error).to.be.instanceOf(Boom);
           expect(error?.output.statusCode).to.be.equal(500);
           expect(payload).to.be.null;
-
-          done();
-        });
-    });
-  });
-
-  describe('GetRegistrationType', () => {
-    let accountServiceMock: IAccountService;
-    let fakeUserModel: IFakeUserModel;
-    let fakeNewEmail: string;
-
-    beforeEach(() => {
-      fakeUserModel = {
-        _id: faker.random.uuid(),
-        password: faker.internet.password(),
-        email: faker.internet.email(),
-        isVerified: faker.random.boolean(),
-        externalType: null,
-        save: stub(),
-        checkPassword: stub(),
-      };
-
-      accountServiceMock = new AccountService(
-        createStubInstance(LoggingHelper)
-      );
-    });
-
-    it("should return 'email' registration type", (done) => {
-      // Act
-      accountServiceMock
-        .GetRegistrationType(fakeUserModel as any)
-        .then(({ error, payload }) => {
-          // Assert
-          expect(error).to.be.null;
-          expect(payload).to.be.equal('email');
-
-          done();
-        });
-    });
-
-    it('should return expected registration type', (done) => {
-      // Arrange
-      const expectedRegistrationType = faker.random.word();
-
-      fakeUserModel.externalType = expectedRegistrationType;
-
-      // Act
-      accountServiceMock
-        .GetRegistrationType(fakeUserModel as any)
-        .then(({ error, payload }) => {
-          // Assert
-          expect(error).to.be.null;
-          expect(payload).to.be.equal(expectedRegistrationType);
 
           done();
         });
