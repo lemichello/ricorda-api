@@ -1,4 +1,4 @@
 export interface IUserInfo {
-  externalType: 'Google' | 'email';
+  registrationType: 'Google' | 'email';
   translationLanguage: string;
 }
