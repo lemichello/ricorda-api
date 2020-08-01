@@ -124,7 +124,7 @@ export default class AccountService implements IAccountService {
     user: IUserModel
   ): Promise<IServiceResponse<IUserInfo>> {
     const userInfo: IUserInfo = {
-      externalType: user.externalType ?? 'email',
+      registrationType: user.externalType ?? 'email',
       translationLanguage: user.translationLanguage,
     };
 
