@@ -13,8 +13,12 @@ export default class AuthController implements IAuthController {
   }
 
   async logIn(req: Request, res: Response, next: NextFunction): Promise<any> {
-    const { email, password, rememberMe } = req.body;
-    const { error, payload } = await this.authService.LogIn(email, password);
+    const { email, password, rememberMe, recaptchaToken } = req.body;
+    const { error, payload } = await this.authService.LogIn(
+      email,
+      password,
+      recaptchaToken
+    );
 
     if (error !== null) {
       return next(error);
@@ -73,8 +77,12 @@ export default class AuthController implements IAuthController {
   }
 
   async signUp(req: Request, res: Response, next: NextFunction): Promise<any> {
-    const { email, password } = req.body;
-    const { error } = await this.authService.SignUp(email, password);
+    const { email, password, recaptchaToken } = req.body;
+    const { error } = await this.authService.SignUp(
+      email,
+      password,
+      recaptchaToken
+    );
 
     if (error !== null) {
       return next(error);
