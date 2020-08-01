@@ -10,8 +10,16 @@ export interface IRefreshTokenResponse {
 
 export interface IAuthService {
   LogInWithGoogle(userToken: string): Promise<IServiceResponse<IUser>>;
-  LogIn(email: string, password: string): Promise<IServiceResponse<IUser>>;
-  SignUp(email: string, password: String): Promise<IServiceResponse<IUser>>;
+  LogIn(
+    email: string,
+    password: string,
+    recaptchaToken: string
+  ): Promise<IServiceResponse<IUser>>;
+  SignUp(
+    email: string,
+    password: String,
+    recaptchaToken: string
+  ): Promise<IServiceResponse<IUser>>;
   VerifyEmail(token: string): Promise<IServiceResponse<string>>;
   ResendVerificationEmail(email: string): Promise<IServiceResponse<IUser>>;
   RefreshToken(token: string): Promise<IServiceResponse<IRefreshTokenResponse>>;

@@ -11,6 +11,7 @@ import { IAuthHelper } from '../helpers/interfaces/IAuthHelper';
 import { IServiceResponse } from '../interfaces/IServiceResponse';
 import { badRequest, internal } from '@hapi/boom';
 import { IUserModel } from '../models/userModel';
+import axios, { AxiosResponse } from 'axios';
 
 export default class AuthService implements IAuthService {
   private userModel: Models.UserModel;
@@ -88,9 +89,19 @@ export default class AuthService implements IAuthService {
 
   public async LogIn(
     email: string,
-    password: string
+    password: string,
+    recaptchaToken: string
   ): Promise<IServiceResponse<IUser>> {
     try {
+      const isCorrectToken = await this.CheckRecaptchaToken(recaptchaToken);
+
+      if (!isCorrectToken) {
+        return {
+          error: badRequest('Provided incorrect recaptcha token'),
+          payload: null,
+        };
+      }
+
       const user = await this.userModel
         .findOne({
           email: email,
@@ -140,9 +151,19 @@ export default class AuthService implements IAuthService {
 
   public async SignUp(
     email: string,
-    password: string
+    password: string,
+    recaptchaToken: string
   ): Promise<IServiceResponse<IUser>> {
     try {
+      const isCorrectToken = await this.CheckRecaptchaToken(recaptchaToken);
+
+      if (!isCorrectToken) {
+        return {
+          error: badRequest('Provided incorrect recaptcha token'),
+          payload: null,
+        };
+      }
+
       const user = await this.userModel.create({
         email: email,
         password: password,
@@ -369,5 +390,20 @@ export default class AuthService implements IAuthService {
         payload: null,
       };
     }
+  }
+
+  private async CheckRecaptchaToken(token: string): Promise<boolean> {
+    const resp: AxiosResponse<{ success: boolean }> = await axios.post(
+      'https://www.google.com/recaptcha/api/siteverify',
+      {},
+      {
+        params: {
+          secret: config.googleRecaptchaKey,
+          response: token,
+        },
+      }
+    );
+
+    return resp.data.success;
   }
 }

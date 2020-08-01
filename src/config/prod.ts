@@ -20,6 +20,7 @@ const prodConfig: IConfig = {
   logDnaKey: process.env.LOG_DNA_KEY!,
   googleClientId: process.env.GOOGLE_CLIENT_ID!,
   googleTranslationAPIKey: process.env.GOOGLE_TRANSLATION_API_KEY!,
+  googleRecaptchaKey: process.env.GOOGLE_RECAPTCHA_KEY!,
   secureCookies: true,
   corsWhitelist: [process.env.WEB_APP_URL!],
 };

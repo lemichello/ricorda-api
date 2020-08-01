@@ -18,6 +18,7 @@ export default interface IConfig {
   logDnaKey: string;
   googleClientId: string;
   googleTranslationAPIKey: string;
+  googleRecaptchaKey: string;
   secureCookies: boolean;
   corsWhitelist: string[];
 }

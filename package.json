@@ -34,6 +34,7 @@
     "@types/nodemailer": "^6.4.0",
     "@types/pubsub-js": "^1.8.0",
     "awilix": "^4.2.6",
+    "axios": "^0.19.2",
     "bcrypt": "^4.0.1",
     "celebrate": "^12.1.2",
     "compression": "^1.7.4",

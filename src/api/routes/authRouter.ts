@@ -12,6 +12,7 @@ router.post(
     body: Joi.object({
       email: Joi.string().not().empty().required(),
       password: Joi.string().not().empty().required(),
+      recaptchaToken: Joi.string().not().empty().required(),
       rememberMe: Joi.boolean().required(),
     }),
   }),
@@ -27,6 +28,7 @@ router.post(
     body: Joi.object({
       email: Joi.string().not().empty().required(),
       password: Joi.string().not().empty().required(),
+      recaptchaToken: Joi.string().not().empty().required(),
     }),
   }),
   controller.signUp.bind(controller)
