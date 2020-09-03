@@ -7,11 +7,7 @@ async function startServer() {
 
   let port = process.env.PORT || '3000';
 
-  app.listen(port, (err) => {
-    if (err) {
-      console.error(`Can't start server : `, err);
-    }
-
+  app.listen(port, () => {
     console.info(`Server is listening on port : ${port}`);
   });
 }
