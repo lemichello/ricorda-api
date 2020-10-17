@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import container from './dependencyInjector';
 import compression from 'compression';
+import helmet from 'helmet';
 
 import authRouter from '../api/routes/authRouter';
 import wordsRouter from '../api/routes/wordsRouter';
@@ -35,6 +36,8 @@ export default (app: express.Application) => {
       credentials: true,
     })
   );
+
+  app.use(helmet());
   app.use(morgan('dev'));
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
