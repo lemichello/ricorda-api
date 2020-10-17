@@ -5,6 +5,7 @@ import cors from 'cors';
 import container from './dependencyInjector';
 import compression from 'compression';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 import authRouter from '../api/routes/authRouter';
 import wordsRouter from '../api/routes/wordsRouter';
@@ -38,6 +39,12 @@ export default (app: express.Application) => {
   );
 
   app.use(helmet());
+  app.use(
+    rateLimit({
+      windowMs: 60 * 1000,
+      max: 100,
+    })
+  );
   app.use(morgan('dev'));
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
